@@ -1,0 +1,68 @@
+# Define os serviços que fazem parte do ambiente
+services:
+
+  # Backend Spring Boot
+  backend:
+
+    # Cria a imagem do backend usando o Dockerfile
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    # Nome do container do backend
+    container_name: backend-fatec
+
+    # Porta do computador : porta do backend
+    ports:
+      - "8080:8080"
+
+    # Variáveis utilizadas pelo Spring Boot
+    environment:
+
+      # URL do PostgreSQL local
+      DB_URL: jdbc:postgresql://postgres:5432/backend_fatec
+
+      # Usuário do PostgreSQL
+      DB_USERNAME: postgres
+
+      # Senha do PostgreSQL
+      DB_PASSWORD: postgres
+
+    # Garante que o banco seja iniciado antes do backend
+    depends_on:
+      - postgres
+
+
+  # Banco PostgreSQL local
+  postgres:
+
+    # Imagem oficial do PostgreSQL
+    image: postgres:17
+
+    # Nome do container do banco
+    container_name: backend-fatec-postgres
+
+    # Configurações iniciais do banco
+    environment:
+
+      # Usuário do banco
+      POSTGRES_USER: postgres
+
+      # Senha do banco
+      POSTGRES_PASSWORD: postgres
+
+      # Nome do banco
+      POSTGRES_DB: backend_fatec
+
+    # Porta do computador : porta do PostgreSQL
+    ports:
+      - "5432:5432"
+
+    # Mantém os dados do banco
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+
+# Volume utilizado para armazenar os dados do PostgreSQL
+volumes:
+  postgres_data:

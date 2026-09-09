@@ -1,0 +1,80 @@
+# ==============================
+# Maven
+# ==============================
+
+# Arquivos compilados e gerados pelo Maven
+target/
+
+# Maven Wrapper
+.mvn/wrapper/maven-wrapper.jar
+
+# Permite target dentro de exemplos específicos, caso existam
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+
+# ==============================
+# Spring Tool Suite / Eclipse
+# ==============================
+
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache
+
+
+# ==============================
+# IntelliJ IDEA
+# ==============================
+
+.idea/
+*.iws
+*.iml
+*.ipr
+
+
+# ==============================
+# NetBeans
+# ==============================
+
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+
+# ==============================
+# Visual Studio Code
+# ==============================
+
+.vscode/
+
+
+# ==============================
+# Arquivos de ambiente
+# ==============================
+
+# Arquivos que podem conter senhas
+.env
+.env.*
+!.env.example
+
+
+# ==============================
+# Arquivos gerados pelo projeto
+# ==============================
+
+# Documentos DOCX/PDF gerados durante os testes
+documentos-gerados/
+
+
+# Arquivos de log
+*.log

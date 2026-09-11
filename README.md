@@ -87,10 +87,70 @@ Antes de executar o projeto, é necessário possuir:
 
 ---
 
+## Clonar e configurar o projeto
 
+Antes de executar o backend, é necessário clonar o repositório e abrir o projeto no IntelliJ IDEA.
 
+### 1. Abra o IntelliJ IDEA
+
+Abra o **IntelliJ IDEA**.
+
+Na tela inicial, selecione:
+
+```text
+Clone Repository
+````
+
+### 2. Informe o repositório
+
+No campo **URL**, informe:
+
+```text
+https://github.com/Otavio-e-Amigos/backend-fatec.git
+```
+
+Depois, selecione o local onde deseja salvar o projeto no computador.
+
+Clique em:
+
+```text
+Clone
+```
+
+### 3. Abra o projeto
+
+Após o download do repositório, o IntelliJ IDEA poderá perguntar como deseja abrir o projeto.
+
+Selecione a opção:
+
+```text
+Add IDE and project files
+```
+
+Depois, clique em:
+
+```text
+Trust Project
+```
+
+O Windows também poderá exibir uma mensagem solicitando confirmação para confiar no projeto.
+
+Confirme a opção para continuar.
+
+### 4. Aguarde a configuração
+
+Depois de abrir o projeto, o IntelliJ IDEA irá identificar o projeto Maven e carregar as dependências necessárias.
+
+Aguarde o carregamento terminar antes de executar o backend.
+
+As dependências serão baixadas automaticamente pelo Maven.
+
+> A primeira inicialização pode levar alguns minutos, dependendo da velocidade da internet e do computador.
+
+Após concluir essa etapa, o projeto estará pronto para ser executado.
 
 ---
+
 ## Como executar
 
 ### IntelliJ IDEA

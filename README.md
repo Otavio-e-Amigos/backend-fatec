@@ -18,6 +18,7 @@
 - [Sobre o Projeto](#sobre-o-projeto)
 - [Tecnologias](#tecnologias)
 - [Pré-requisitos](#pré-requisitos)
+- [Clonar e configurar o projeto](#clonar-e-configurar-o-projeto)
 - [Como executar](#como-executar)
 - [Configuração do Banco de Dados](#configuração-do-banco-de-dados)
 - [Documentação e Testes da API](#documentação-e-testes-da-api)

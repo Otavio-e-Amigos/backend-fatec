@@ -1,10 +1,9 @@
-
 # Backend FATEC
 
 [![Java](https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](https://www.oracle.com/java/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.1-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![Apache POI](https://img.shields.io/badge/Apache%20POI-DOCX%20%7C%20PDF-D22128?style=for-the-badge&logo=apache&logoColor=white)](https://poi.apache.org/)
+[![Apache POI](https://img.shields.io/badge/Apache%20POI-DOCX-D22128?style=for-the-badge&logo=apache&logoColor=white)](https://poi.apache.org/)
 [![Docker](https://img.shields.io/badge/Docker-Container-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 [![Maven](https://img.shields.io/badge/Maven-Build-C71A36?style=for-the-badge&logo=apachemaven&logoColor=white)](https://maven.apache.org/)
 [![Swagger](https://img.shields.io/badge/OpenAPI-Swagger%20UI-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)](https://swagger.io/)
@@ -19,11 +18,12 @@
 - [Sobre o Projeto](#sobre-o-projeto)
 - [Tecnologias](#tecnologias)
 - [Pré-requisitos](#pré-requisitos)
-- [Instalação e Execução](#instalação-e-execução)
-- [Variáveis de Ambiente](#variáveis-de-ambiente)
+- [Como executar](#como-executar)
+- [Configuração do Banco de Dados](#configuração-do-banco-de-dados)
 - [Documentação e Testes da API](#documentação-e-testes-da-api)
 - [Estrutura de Pastas](#estrutura-de-pastas)
 - [Contribuindo](#contribuindo)
+- [Licença](#licença)
 
 ---
 
@@ -31,22 +31,20 @@
 
 O projeto tem como objetivo automatizar o preenchimento e a geração de documentos relacionados aos professores, utilizando dados estruturados no banco de dados.
 
-### Fluxo previsto
-
 ```text
 Selecionar professor
         ↓
-Selecionar período/grade
+Selecionar semestre/período letivo
         ↓
-Escolher mês e ano
+Sistema identifica a grade correspondente
         ↓
-Sistema calcula e organiza as informações
+Sistema preenche automaticamente o documento
         ↓
-Visualizar documento
+Visualizar documento preenchido
         ↓
 Gerar documento DOCX
         ↓
-Gerar o PDF Final.
+Gerar PDF, se necessário
 ````
 
 Nesta etapa inicial, o backend está sendo estruturado para receber a implementação das entidades, regras de negócio, persistência de dados e automação dos documentos.
@@ -56,8 +54,6 @@ O sistema inicialmente será destinado ao responsável pelo processo e à admini
 ---
 
 ## Tecnologias
-
-### Backend
 
 | Tecnologia               | Uso                                         |
 | ------------------------ | ------------------------------------------- |
@@ -83,31 +79,184 @@ Antes de executar o projeto, é necessário possuir:
 
 * [Java 21](https://www.oracle.com/java/)
 * [IntelliJ IDEA](https://www.jetbrains.com/idea/) ou outra IDE compatível com Java
-* [Maven](https://maven.apache.org/)
 * [Git](https://git-scm.com/)
-* [Docker](https://www.docker.com/) e Docker Compose
-* [PostgreSQL](https://www.postgresql.org/), caso seja utilizado um banco local
-* Conta no [Neon](https://neon.com/), caso seja utilizado o PostgreSQL hospedado
+* [Docker](https://www.docker.com/) e Docker Compose, caso utilize Docker
+* Conta no [Neon](https://neon.com/), caso utilize PostgreSQL hospedado
+
+> O projeto possui Maven Wrapper (`mvnw` e `mvnw.cmd`), portanto não é necessário instalar o Maven separadamente.
 
 ---
 
-## Instalação e Execução
 
-> Esta seção será detalhada conforme o fluxo definitivo de execução e configuração do projeto for definido.
+
 
 ---
+## Como executar
 
-## Variáveis de Ambiente
+### IntelliJ IDEA
 
-As informações de conexão com o banco de dados são configuradas por meio de variáveis de ambiente.
+A forma mais simples de executar o projeto durante o desenvolvimento é pelo IntelliJ IDEA.
 
-Variáveis utilizadas:
+1. Abra o projeto no IntelliJ IDEA.
+2. Abra o arquivo `BackendApplication.java`.
+3. Execute pelo botão **Run ▶**.
+4. A API estará disponível em:
 
+```text
+http://localhost:8080
 ```
+
+Endpoint de teste:
+
+```text
+http://localhost:8080/api/teste
+```
+
+### Maven
+
+O projeto possui Maven Wrapper, portanto não é necessário instalar o Maven globalmente.
+
+#### Windows
+
+Para executar os testes:
+
+```bash
+mvnw.cmd test
+```
+
+Para gerar o JAR:
+
+```bash
+mvnw.cmd package
+```
+
+#### Linux/macOS
+
+Para executar os testes:
+
+```bash
+./mvnw test
+```
+
+Para gerar o JAR:
+
+```bash
+./mvnw package
+```
+
+### Docker
+
+O Docker pode ser utilizado para padronizar o ambiente, executar o backend em um container e facilitar um futuro deploy.
+
+Primeiro, gere o JAR:
+
+```bash
+mvnw.cmd package
+```
+
+Depois, crie a imagem:
+
+```bash
+docker build -t backend-fatec .
+```
+
+Para executar o container, é necessário informar as credenciais do banco por meio das variáveis de ambiente.
+
+Exemplo:
+
+```bash
+docker run --name backend-fatec -p 8080:8080 -e DB_URL="jdbc:postgresql://HOST/neondb?sslmode=require&channel_binding=require" -e DB_USERNAME="SEU_USUARIO" -e DB_PASSWORD="SUA_SENHA" backend-fatec
+```
+
+As variáveis utilizadas são:
+
+```text
+DB_URL       → URL de conexão com o PostgreSQL
+DB_USERNAME  → usuário do banco
+DB_PASSWORD  → senha do banco
+```
+
+Exemplo utilizando o Neon:
+
+```text
+DB_URL=jdbc:postgresql://HOST/neondb?sslmode=require&channel_binding=require
+DB_USERNAME=SEU_USUARIO
+DB_PASSWORD=SUA_SENHA
+```
+
+> As credenciais utilizadas no exemplo são apenas ilustrativas. Substitua pelos dados do seu banco.
+
+> As variáveis configuradas no IntelliJ IDEA não são utilizadas automaticamente pelo container Docker. Quando executar o backend pelo Docker, as variáveis precisam ser informadas no próprio `docker run` ou configuradas no Docker Compose.
+
+### Docker Compose
+
+Para iniciar o backend junto com um PostgreSQL local:
+
+```bash
+docker compose up --build
+```
+
+Para parar os containers:
+
+```bash
+docker compose down
+```
+
+O `docker-compose.yml` já possui as configurações necessárias para executar um PostgreSQL local para desenvolvimento.
+
+> O PostgreSQL do Docker e o PostgreSQL do Neon são bancos diferentes. O Docker oferece uma opção de banco local, enquanto o Neon pode ser utilizado como banco PostgreSQL hospedado para desenvolvimento e testes.
+
+---
+
+## Configuração do Banco de Dados
+
+O projeto utiliza PostgreSQL.
+
+A conexão com o banco é feita por meio de variáveis de ambiente:
+
+```properties
+spring.datasource.url=${DB_URL}
+spring.datasource.username=${DB_USERNAME}
+spring.datasource.password=${DB_PASSWORD}
+```
+
+### Configurando as credenciais no IntelliJ IDEA
+
+As credenciais do banco devem ser configuradas na configuração de execução do `BackendApplication`.
+
+No IntelliJ IDEA:
+
+1. Clique em **Run**.
+2. Clique em **Edit Configurations...**.
+3. Selecione **BackendApplication**.
+4. Caso a opção **Environment variables** não esteja aparecendo, clique em **Modify options**.
+5. Dentro de **Modify options**, marque **Environment variables**.
+6. A opção **Environment variables** aparecerá na configuração.
+7. Clique no campo de **Environment variables** para adicionar as variáveis.
+
+Na tabela de variáveis do IntelliJ:
+
+```text
+Nome da variável       Valor da variável
+```
+
+Ou seja:
+
+```text
+DB_URL                 jdbc:postgresql://...
+DB_USERNAME            seu_usuario
+DB_PASSWORD            sua_senha
+```
+
+Adicione as seguintes variáveis:
+
+```text
 DB_URL
 DB_USERNAME
 DB_PASSWORD
 ```
+
+Preencha os valores de acordo com o banco utilizado.
 
 Exemplo:
 
@@ -117,15 +266,35 @@ DB_USERNAME=SEU_USUARIO
 DB_PASSWORD=SUA_SENHA
 ```
 
-**Nunca coloque senhas ou outras credenciais diretamente no código ou no GitHub.**
+Depois de adicionar as variáveis, clique em **Apply** e depois em **OK**.
+
+Ao executar o `BackendApplication`, o Spring Boot utilizará essas informações para realizar a conexão com o banco de dados.
+
+### Exemplo com Neon
+
+```text
+DB_URL=jdbc:postgresql://HOST/neondb?sslmode=require&channel_binding=require
+DB_USERNAME=SEU_USUARIO
+DB_PASSWORD=SUA_SENHA
+```
+
+As variáveis devem ser configuradas no ambiente de execução da aplicação.
+
+O Hibernate está configurado para não alterar automaticamente a estrutura do banco:
+
+```properties
+spring.jpa.hibernate.ddl-auto=none
+```
+
+> Cada desenvolvedor deve utilizar suas próprias credenciais. Nunca coloque senhas ou outras informações sensíveis diretamente no código ou no GitHub.
 
 ---
 
 ## Documentação e Testes da API
 
-O projeto utiliza **OpenAPI / Swagger UI** para documentação e testes dos endpoints da API.
+O projeto utiliza **OpenAPI / Swagger UI** para documentar e testar os endpoints da API.
 
-Com o backend em execução:
+Com o backend em execução, acesse:
 
 ```text
 http://localhost:8080/swagger-ui/index.html
@@ -141,6 +310,31 @@ Resposta esperada:
 
 ```text
 API do backend funcionando!
+```
+
+### Insomnia
+
+Também é possível utilizar o **Insomnia** para realizar testes dos endpoints da API.
+
+Exemplo de teste:
+
+```text
+GET http://localhost:8080/api/teste
+```
+
+Resposta esperada:
+
+```text
+API do backend funcionando!
+```
+
+O Insomnia pode ser utilizado para testar requisições como:
+
+```text
+GET
+POST
+PUT
+DELETE
 ```
 
 ---
@@ -205,29 +399,27 @@ backend-fatec/
 
 ## Contribuindo
 
-Para manter o projeto organizado, todas as alterações devem ser feitas em uma
-branch própria e relacionadas a uma Issue do GitHub.
+Para manter o projeto organizado, todas as alterações devem ser feitas em uma branch própria e relacionadas a uma Issue do GitHub.
 
 O fluxo utilizado pelo projeto é:
 
 **main → atualizar projeto → selecionar Issue → criar branch → desenvolver → testar → Pull Request → revisão → merge**
 
-### 1. Antes de começar
+### 1. Atualize a `main`
 
-Primeiro, certifique-se de estar na branch `main`.
+Primeiro, certifique-se de estar na branch `main`:
 
 ```bash
 git checkout main
-````
+```
 
-Depois, atualize sua cópia local com as alterações mais recentes do GitHub:
+Depois, atualize sua cópia local:
 
 ```bash
 git pull origin main
 ```
 
-> **Importante:** sempre faça isso antes de iniciar uma nova tarefa.
-> Dessa forma, sua branch será criada a partir da versão mais atual da `main`.
+> Sempre faça isso antes de iniciar uma nova tarefa.
 
 ---
 
@@ -237,32 +429,94 @@ As tarefas do projeto são organizadas pelo **GitHub Projects**.
 
 Para começar uma tarefa:
 
-1. Acesse o **GitHub Projects** do projeto.
-2. Localize a tarefa que você deseja realizar.
-3. Abra a tarefa.
-4. Verifique a descrição e os requisitos da Issue.
-5. No próprio GitHub, utilize a opção **Create a branch**.
-6. O GitHub apresentará as informações necessárias para criar a branch.
-7. Utilize o nome da branch seguindo as convenções definidas abaixo.
-
-> **Não é necessário criar uma branch aleatória antes de escolher a tarefa.**
-> A branch deve estar relacionada à Issue que você está desenvolvendo.
+1. Acesse o GitHub Projects do projeto.
+2. Localize a tarefa que deseja realizar.
+3. Abra a Issue e leia os requisitos.
+4. Utilize a opção **Development → Create a branch**, quando disponível.
+5. Caso não queira utilizar essa opção, a branch também pode ser criada manualmente seguindo a convenção definida abaixo.
 
 ---
 
-### 3. Convenção de branches
+### 3. Criar uma branch pela Issue
 
-O nome da branch deve indicar o tipo de alteração que será realizada.
+Dentro da Issue, no lado direito, acesse:
 
-Utilize uma das opções abaixo:
+```text
+Development
+    ↓
+Create a branch
+```
+
+O GitHub mostrará opções como:
+
+```text
+Branch name
+Repository destination
+Branch source
+```
+
+Depois de criar a branch, ela ficará associada à Issue.
+
+Exemplo:
+
+```text
+30-feat-teste
+```
+
+Depois que a branch for criada, o GitHub poderá mostrar:
+
+```text
+Checkout in your local repository
+```
+
+Com os comandos:
+
+```bash
+git fetch origin
+git checkout 30-feat-teste
+```
+
+#### `git fetch origin`
+
+```bash
+git fetch origin
+```
+
+Atualiza as informações do seu Git local sobre as branches existentes no repositório remoto.
+
+Esse comando **não altera os arquivos do projeto**.
+
+#### `git checkout`
+
+```bash
+git checkout 30-feat-teste
+```
+
+Muda o seu projeto local para a branch:
+
+```text
+30-feat-teste
+```
+
+Assim, você poderá trabalhar nessa branch.
+
+> A opção **Create a branch** do GitHub já cria a branch no repositório remoto. Os comandos `git fetch origin` e `git checkout` servem para acessar essa branch no seu computador.
+
+Também é possível trocar de branch diretamente pelo IntelliJ IDEA ou pelo GitHub Desktop.
+
+---
+
+### 4. Convenção de branches
+
+O nome da branch deve indicar o tipo de alteração realizada.
 
 * `feat/nome-da-feature` — novas funcionalidades
 * `fix/nome-do-bug` — correções de bugs
 * `chore/nome-da-tarefa` — manutenção, configurações e tarefas técnicas
 * `docs/nome-do-documento` — alterações na documentação
-* `refactor/nome-da-alteracao` — refatoração de código sem alterar o comportamento
+* `refactor/nome-da-alteracao` — refatoração de código
 * `test/nome-do-teste` — criação ou alteração de testes
-* `style/nome-da-alteracao` — alterações de formatação ou estilo do código
+* `style/nome-da-alteracao` — formatação ou estilo do código
 * `perf/nome-da-melhoria` — melhorias de desempenho
 
 ### Exemplos
@@ -274,35 +528,43 @@ chore/configuracao-docker
 docs/atualizar-readme
 refactor/organizar-service-professor
 test/teste-cadastro-professor
-style/formatacao-controller
-perf/melhorar-consulta-professor
 ```
-
-> **Siga sempre a categoria que melhor representa a alteração realizada.**
-> Evite nomes genéricos como `teste`, `alteracao`, `branch1` ou `minha-feature`.
 
 ---
 
-### 4. Crie ou utilize a branch da tarefa
+### 5. Crie ou utilize a branch
 
-Caso o GitHub Projects tenha criado a branch automaticamente, utilize essa
-branch localmente.
+A criação manual de uma branch é **opcional**.
 
-Caso seja necessário criar a branch manualmente, utilize:
+Se você utilizou a opção **Development → Create a branch** dentro da Issue do GitHub, **não precisa executar `git checkout -b`**.
+
+Nesse caso, basta acessar a branch criada no GitHub:
+
+```bash
+git fetch origin
+git checkout nome-da-branch
+```
+
+Exemplo:
+
+```bash
+git fetch origin
+git checkout 30-feat-teste
+```
+
+Caso você **não queira utilizar a opção Development → Create a branch**, pode criar uma branch manualmente pelo Git:
 
 ```bash
 git checkout -b feat/nome-da-feature
 ```
 
-Substitua `feat/nome-da-feature` pelo nome relacionado à tarefa.
-
-Por exemplo:
+Exemplo:
 
 ```bash
 git checkout -b feat/cadastro-professor
 ```
 
-Depois de criar a branch, confirme que está nela:
+Confirme a branch atual:
 
 ```bash
 git branch
@@ -317,58 +579,54 @@ Exemplo:
 * feat/cadastro-professor
 ```
 
-> **A partir desse momento, todo o desenvolvimento da tarefa deve ser feito
-> nessa branch. Não faça alterações diretamente na `main`.**
+> A criação manual de uma branch serve para quando você quiser criar uma branch separada diretamente pelo Git, sem utilizar a opção de criação de branch da Issue.
+
+> Todo o desenvolvimento da tarefa deve ser realizado nessa branch. Não faça alterações diretamente na `main`.
 
 ---
 
-### 5. Desenvolva a tarefa
-
-Faça as alterações necessárias para resolver a Issue.
+### 6. Desenvolva a tarefa
 
 Durante o desenvolvimento:
 
 * Siga os requisitos descritos na Issue.
 * Mantenha o código organizado.
-* Utilize os padrões já adotados no projeto.
+* Utilize os padrões adotados no projeto.
 * Evite alterar arquivos que não sejam necessários para a tarefa.
 * Crie ou atualize os testes quando necessário.
 * Verifique se sua alteração não quebra funcionalidades existentes.
 
 ---
 
-### 6. Faça os testes antes do Pull Request
+### 7. Teste antes do Pull Request
 
-**O Pull Request só deve ser criado depois que a tarefa estiver concluída e
-os testes tiverem sido realizados.**
+O Pull Request deve ser criado somente depois que a tarefa estiver concluída e testada.
 
-Antes de enviar a alteração, verifique:
+Antes de abrir o Pull Request, verifique:
 
 * O projeto inicia normalmente.
 * A funcionalidade desenvolvida funciona corretamente.
-* Os testes automatizados passam.
-* Não existem erros ou warnings importantes relacionados à alteração.
+* Os testes necessários foram realizados.
+* Não existem erros importantes relacionados à alteração.
 * As funcionalidades existentes continuam funcionando.
-* O código está organizado.
-* A Issue foi realmente atendida.
+* A Issue foi atendida.
 
-No backend, por exemplo, execute:
+Os testes devem ser realizados de acordo com o tipo de alteração. Podem ser utilizados, por exemplo:
 
-```bash
-mvn test
+```text
+Swagger
+Insomnia
+IntelliJ IDEA
+Testes automatizados
 ```
 
-Caso o projeto utilize outras formas de teste ou validação, execute também
-os testes necessários para a alteração.
-
-> **Não abra o Pull Request apenas porque terminou de escrever o código.**
-> Primeiro finalize, teste e valide a alteração.
+> Não abra o Pull Request apenas porque terminou o código. Primeiro finalize, teste e valide a alteração.
 
 ---
 
-### 7. Envie a branch para o GitHub
+### 8. Envie a branch para o GitHub
 
-Depois que a implementação estiver concluída e testada, adicione os arquivos:
+Adicione os arquivos:
 
 ```bash
 git add .
@@ -380,7 +638,7 @@ Faça o commit:
 git commit -m "feat: descrição da alteração"
 ```
 
-Depois, envie a branch para o GitHub:
+Envie a branch:
 
 ```bash
 git push origin feat/nome-da-feature
@@ -394,16 +652,20 @@ git push origin feat/cadastro-professor
 
 ---
 
-### 8. Crie o Pull Request
+### 9. Crie o Pull Request
 
-Somente após concluir os testes, abra um **Pull Request** da sua branch
-para a branch `main`.
+Depois de concluir e testar a implementação, abra um **Pull Request** da sua branch para a `main`.
 
-O Pull Request deve possuir uma descrição clara, permitindo que outra pessoa
-entenda o que foi alterado, por que a alteração foi feita e como ela foi
-validada.
+A descrição deve informar:
 
-Sempre que possível, vincule o Pull Request à **Issue correspondente**.
+* O que foi alterado.
+* Por que a alteração foi realizada.
+* Quais funcionalidades foram implementadas.
+* Quais testes foram executados.
+* Possíveis impactos.
+* A Issue relacionada.
+
+Sempre que possível, vincule o Pull Request à Issue correspondente.
 
 ---
 
@@ -447,10 +709,11 @@ Caso não exista nenhum impacto conhecido, informe:
 Closes #XX
 ```
 
-### Prompt para utilizar com uma IA
+---
 
-Caso tenha dificuldade para escrever a descrição do Pull Request, você pode
-utilizar o seguinte prompt:
+### Prompt para criar a descrição do Pull Request
+
+Caso tenha dificuldade para escrever a descrição do Pull Request, utilize o seguinte prompt:
 
 ```text
 Preciso criar a descrição de um Pull Request para este projeto.
@@ -473,7 +736,7 @@ Liste de forma objetiva as funcionalidades, alterações ou arquivos
 importantes implementados.
 
 ## Testes realizados
-Liste os testes que foram realmente executados e informe o resultado.
+Liste somente os testes que realmente foram executados.
 Não diga que um teste foi realizado se eu não informar que ele foi executado.
 
 ## Possíveis impactos
@@ -481,7 +744,8 @@ Informe quais partes do sistema podem ser afetadas pela alteração.
 Se não houver impacto conhecido, informe isso claramente.
 
 ## Issue relacionada
-Informe a Issue relacionada ao Pull Request no formato:
+Informe a Issue relacionada no formato:
+
 Closes #XX
 
 Regras:
@@ -512,57 +776,10 @@ Possíveis impactos:
 [DESCREVA AQUI]
 ```
 
-### Exemplo de Pull Request preenchido
-
-```markdown
-## Descrição
-
-Foi realizada a configuração inicial do backend da aplicação,
-utilizando Java 21 e Spring Boot.
-
-Também foram adicionadas as configurações iniciais para acesso ao
-PostgreSQL, documentação da API e geração de documentos DOCX.
-
-## Motivo da alteração
-
-Essa alteração foi realizada para preparar a estrutura inicial do backend
-e permitir o desenvolvimento das próximas funcionalidades do sistema.
-
-## Funcionalidades implementadas
-
-- Configuração inicial do Spring Boot.
-- Configuração do PostgreSQL.
-- Configuração do JPA/Hibernate.
-- Configuração do Swagger/OpenAPI.
-- Configuração do Apache POI.
-- Criação da estrutura inicial de pacotes.
-- Criação de endpoint para teste da API.
-- Configuração do Docker.
-- Configuração do Docker Compose.
-
-## Testes realizados
-
-- [x] Inicialização do backend.
-- [x] Teste do endpoint `/api/teste`.
-- [x] Conexão com o banco de dados.
-- [x] Execução dos testes automatizados.
-- [x] Geração do arquivo JAR.
-- [x] Teste da aplicação utilizando Docker.
-
-## Possíveis impactos
-
-Nenhum impacto conhecido nas funcionalidades existentes,
-pois esta alteração corresponde à configuração inicial do backend.
-
-## Issue relacionada
-
-Closes #27
-```
-
-**Regra principal:** `main` deve permanecer estável. O desenvolvimento é feito na branch da tarefa, e o **Pull Request só é aberto depois que a implementação estiver finalizada e testada**.
-
 ---
 
 ## Licença
 
-Este projeto foi desenvolvido para fins acadêmicos no projeto da FATEC.
+Este projeto é desenvolvido para fins acadêmicos no contexto da **FATEC**.
+
+A utilização, modificação e distribuição do código devem respeitar os termos definidos no arquivo [`LICENSE`](LICENSE) presente neste repositório.

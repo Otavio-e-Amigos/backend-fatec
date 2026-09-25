@@ -74,7 +74,7 @@ build/
 
 # Documentos DOCX/PDF gerados durante os testes
 documentos-gerados/
-
-
 # Arquivos de log
+
 *.log
+

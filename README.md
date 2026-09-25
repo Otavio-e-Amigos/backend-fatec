@@ -57,13 +57,15 @@ O sistema inicialmente será destinado ao responsável pelo processo e à admini
 ## Tecnologias
 
 | Tecnologia               | Uso                                         |
-| ------------------------ | ------------------------------------------- |
+|--------------------------| ------------------------------------------- |
 | **Java 21**              | Linguagem principal                         |
 | **Spring Boot**          | Framework principal do backend              |
 | **Spring Web MVC**       | Desenvolvimento da API REST                 |
 | **Spring Data JPA**      | Persistência e acesso aos dados             |
+| **Spring Security**      | Autenticação e controle de acesso           |
 | **Hibernate**            | ORM utilizado pelo JPA                      |
 | **Jakarta Validation**   | Validação dos dados recebidos pela API      |
+| **Flyway**               | Controle e versionamento das migrations do banco de dados |
 | **PostgreSQL**           | Banco de dados relacional                   |
 | **Neon**                 | PostgreSQL hospedado                        |
 | **Apache POI**           | Manipulação e geração de documentos `.docx` |

@@ -6,10 +6,10 @@ import br.com.fatec.backend.dto.usuario.UsuarioUpdateDTO;
 import br.com.fatec.backend.entity.Perfil;
 import br.com.fatec.backend.service.UsuarioService;
 import jakarta.validation.Valid;
-import org.springframework.security.core.Authentication;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,7 +24,6 @@ public class UsuarioController {
         this.service = service;
     }
 
-    // Rota pública para qualquer usuário logado consultar seus próprios dados
     @GetMapping("/me")
     public ResponseEntity<UsuarioResponseDTO> meuPerfil(Authentication authentication) {
         Long idUsuarioLogado = extrairIdUsuarioLogado(authentication);
@@ -34,7 +33,7 @@ public class UsuarioController {
     @PreAuthorize("hasRole('TI')")
     @GetMapping
     public ResponseEntity<List<UsuarioResponseDTO>> listarTodos() {
-        return  ResponseEntity.ok(service.listarTodos());
+        return ResponseEntity.ok(service.listarTodos());
     }
 
     @PreAuthorize("hasRole('TI')")
@@ -46,15 +45,12 @@ public class UsuarioController {
     @PreAuthorize("hasRole('TI')")
     @PostMapping
     public ResponseEntity<UsuarioResponseDTO> criar(@Valid @RequestBody UsuarioCreateDTO dto) {
-        UsuarioResponseDTO response = service.criar(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.criar(dto));
     }
 
     @PreAuthorize("hasRole('TI')")
     @PutMapping("/{id}")
-    public ResponseEntity<UsuarioResponseDTO> atualizar(
-            @PathVariable Long id,
-            @Valid @RequestBody UsuarioUpdateDTO dto) {
+    public ResponseEntity<UsuarioResponseDTO> atualizar(@PathVariable Long id, @Valid @RequestBody UsuarioUpdateDTO dto) {
         return ResponseEntity.ok(service.atualizar(id, dto));
     }
 
@@ -67,7 +63,6 @@ public class UsuarioController {
 
         Long idUsuarioLogado = extrairIdUsuarioLogado(authentication);
         service.alterarPerfil(id, novoPerfil, idUsuarioLogado);
-
         return ResponseEntity.noContent().build();
     }
 
@@ -86,12 +81,13 @@ public class UsuarioController {
     }
 
     /**
-     * Método utilitário para extrair o ID do usuário que fez a requisição.
-     * Na Etapa 5 (JWT), pegaremos isso diretamente do token.
+     * Extrai o ID do usuário diretamente do objeto de Autenticação do Spring.
      */
     private Long extrairIdUsuarioLogado(Authentication authentication) {
-        // TODO: Substituir pela extração real do CustomUserDetails (Etapa 5)
-        // Retornamos um mock temporário apenas para compilar até o JWT estar pronto.
-        return -1L;
+        if (authentication == null || authentication.getPrincipal() == null) {
+            throw new RuntimeException("Usuário não autenticado.");
+        }
+        // O JWT injetará o ID do usuário como String no "Principal" (configuraremos isso no JwtFilter)
+        return Long.parseLong(authentication.getPrincipal().toString());
     }
 }

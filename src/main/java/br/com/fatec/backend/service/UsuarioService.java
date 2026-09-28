@@ -10,8 +10,11 @@ import br.com.fatec.backend.repository.UsuarioRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.security.SecureRandom;
 import java.text.Normalizer;
 import java.util.List;
+import java.util.Random;
 
 @Service
 public class UsuarioService {
@@ -21,6 +24,7 @@ public class UsuarioService {
     // Usado para gerar o hash das senhas.
     private final PasswordEncoder passwordEncoder;
 
+    private final SecureRandom secureRandom = new SecureRandom();
     /**
      * Recebe as dependências usadas pelo Service.
      */
@@ -51,7 +55,6 @@ public class UsuarioService {
 
     @Transactional(readOnly = true)
     public UsuarioResponseDTO buscarPorId(Long id) {
-        // Reutiliza o método privado buscarEntidadePorId (Clean Code - DRY)
         return UsuarioResponseDTO.daEntidade(buscarEntidadePorId(id));
     }
 
@@ -76,7 +79,6 @@ public class UsuarioService {
     }
     @Transactional
     public void alterarPerfil(Long idAlvo, Perfil novoPerfil, Long idUsuarioLogado) {
-        // Regra: Impedir que qualquer usuário altere o próprio perfil
         if (idAlvo.equals(idUsuarioLogado)) {
             throw new RegraNegocioException("Não é permitido alterar o próprio perfil.");
         }
@@ -102,21 +104,19 @@ public class UsuarioService {
 
     private String gerarLoginAutomatico(String nomeCompleto) {
         String[] partes = nomeCompleto.trim().toLowerCase().split("\\s+");
-        String baseLogin = partes.length > 1 ? partes[0] + "." + partes[partes.length - 1] : partes[0];
+        String baseLogin = partes.length > 1
+                ? partes[0] + "." + partes[partes.length - 1] // Corrigido o erro de sintaxe aqui
+                : partes[0];
 
-        // Remove acentos
         baseLogin = Normalizer.normalize(baseLogin, Normalizer.Form.NFD)
                 .replaceAll("[^\\p{ASCII}]", "")
                 .replaceAll("[^a-z0-9.]", "");
 
-        String loginGerado = baseLogin;
-        int contador = 1;
-
-        // Verifica no banco e incrementa até achar um login livre
-        while (repository.existsByLogin(loginGerado)) {
-            loginGerado = baseLogin + contador;
-            contador++;
-        }
+        String loginGerado;
+        do {
+            int numeroSufixo = secureRandom.nextInt(900) + 100;
+            loginGerado = baseLogin + numeroSufixo;
+        } while (repository.existsByLogin(loginGerado));
 
         return loginGerado;
     }

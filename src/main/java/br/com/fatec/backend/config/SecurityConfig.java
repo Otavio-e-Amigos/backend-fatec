@@ -7,6 +7,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -35,17 +36,17 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
+                // Define a API como Stateless (Obrigatório para JWT)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Rotas públicas (Swagger e Login)
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-
-                        // Rota de login (faremos na próxima etapa)
                         .requestMatchers("/api/autenticacao/**").permitAll()
 
-                        //.requestMatchers("/api/usuarios/**").hasRole("TI")
-                        // Temporariamente liberado para testar o CRUD.
-                        .requestMatchers("/api/usuarios/**").permitAll()
+                        // Rotas protegidas (Apenas TI pode gerenciar usuários)
+                        .requestMatchers("/api/usuarios/**").hasRole("TI")
 
-
+                        // Qualquer outra requisição precisa estar autenticada
                         .anyRequest().authenticated()
                 );
 

@@ -4,7 +4,7 @@ services:
   # Backend Spring Boot
   backend:
 
-    # Cria a imagem do backend usando o Dockerfile
+    # Cria a.md imagem do backend usando o Dockerfile
     build:
       context: .
       dockerfile: Dockerfile

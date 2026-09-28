@@ -1,14 +1,14 @@
 package br.com.fatec.backend.controller;
 
-// Importa a anotação que transforma esta classe
+// Importa a.md anotação que transforma esta classe
 // em um Controller responsável por responder requisições HTTP.
 import org.springframework.web.bind.annotation.GetMapping;
 
-// Importa a anotação que define o caminho principal
+// Importa a.md anotação que define o caminho principal
 // dos endpoints desta classe.
 import org.springframework.web.bind.annotation.RequestMapping;
 
-// Importa a anotação que identifica esta classe
+// Importa a.md anotação que identifica esta classe
 // como um Controller REST.
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class TestController {
 
     /**
-     * Endpoint utilizado para verificar se a API está funcionando.
+     * Endpoint utilizado para verificar se a.md API está funcionando.
      *
      * Quando fizermos uma requisição GET para:
      *
@@ -38,7 +38,7 @@ public class TestController {
     public String testarApi() {
 
         // Retorna uma mensagem simples para confirmar
-        // que o backend recebeu e processou a requisição.
+        // que o backend recebeu e processou a.md requisição.
         return "API do backend funcionando!";
     }
 }

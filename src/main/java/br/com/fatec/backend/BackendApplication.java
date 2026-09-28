@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
  * Classe principal responsável por iniciar
- * a aplicação Spring Boot.
+ * a.md aplicação Spring Boot.
  */
 @SpringBootApplication
 public class BackendApplication {

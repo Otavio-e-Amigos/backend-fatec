@@ -84,7 +84,17 @@
         </dependency>
 
         <!--
-           Apache POI é a biblioteca que vamos utilizar
+           Spring Security é a.md biblioteca que vamos utilizar
+           para implementar a.md autenticação e a.md segurança da aplicação.
+        -->
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
+        <!--
+           Apache POI é a.md biblioteca que vamos utilizar
            para trabalhar com arquivos do Microsoft Word (.docx).
         -->
 
@@ -92,6 +102,24 @@
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
             <version>5.4.1</version>
+        </dependency>
+
+        <!--
+           Controle e versionamento das migrations do banco de dados
+        -->
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-flyway</artifactId>
+        </dependency>
+
+        <!--
+            Suporte do Flyway ao PostgreSQL.
+        -->
+
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
         </dependency>
 
         <!--

@@ -6,7 +6,7 @@ import br.com.fatec.backend.dto.usuario.UsuarioUpdateDTO;
 import br.com.fatec.backend.entity.Perfil;
 import br.com.fatec.backend.service.UsuarioService;
 import jakarta.validation.Valid;
-import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
+import org.springframework.security.core.Authentication;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

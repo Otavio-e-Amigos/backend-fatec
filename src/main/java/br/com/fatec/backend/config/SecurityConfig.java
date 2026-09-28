@@ -36,13 +36,16 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // LIBERA O SWAGGER PARA QUALQUER UM ACESSAR
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 
                         // Rota de login (faremos na próxima etapa)
                         .requestMatchers("/api/autenticacao/**").permitAll()
 
-                        .requestMatchers("/api/usuarios/**").hasRole("TI")
+                        //.requestMatchers("/api/usuarios/**").hasRole("TI")
+                        // Temporariamente liberado para testar o CRUD.
+                        .requestMatchers("/api/usuarios/**").permitAll()
+
+
                         .anyRequest().authenticated()
                 );
 

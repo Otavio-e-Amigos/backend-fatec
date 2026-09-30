@@ -1,10 +1,81 @@
-# Histórico de Alterações da Documentação e do Sistema FATEC
-
-Este arquivo registra as principais alterações, decisões e mudanças realizadas no projeto após a criação das documentações técnicas iniciais em PDF.
-
-O objetivo é manter um histórico das mudanças para que, posteriormente, a documentação técnica possa ser revisada e consolidada com base nos documentos PDF existentes, neste histórico e no código atual do sistema.
+Abaixo está a versão reformulada do seu **`ALTERACOES.md`**. Esta estrutura remove os detalhes específicos da Sprint 1 e atua estritamente como um **template e guia de processo reutilizável** para registrar os avanços e mudanças das próximas sprints.
 
 ---
+
+# Histórico de Alterações da Documentação e do Sistema FATEC
+
+Este arquivo registra as alterações, decisões arquiteturais e mudanças de regras de negócio realizadas no projeto ao longo do desenvolvimento.
+
+O objetivo deste documento é manter o registro cronológico das mudanças por sprint para que a documentação técnica principal (`DOCUMENTACAO.md`) possa ser atualizada de forma incremental e validada.
+
+---
+
+## Estrutura do Fluxo de Documentação
+
+```text
+docs/
+├── DOCUMENTACAO.md                         (Documentação técnica canônica e evolutiva)
+├── ALTERACOES.md                           (Histórico contínuo de mudanças por Sprint)
+├── Documentacao_Tecnica_Banco_de_Dados.pdf (Referência inicial - Baseline)
+├── Documentacao_Tecnica_da_Grade.pdf       (Referência inicial - Baseline)
+└── Documentacao_Tecnica_Folha_Frequencia.pdf (Referência inicial - Baseline)
+
+```
+
+1. **Durante a Sprint:** Qualquer nova regra, endpoint criado ou ajuste arquitetural deve ser anotado neste arquivo (`ALTERACOES.md`).
+
+
+2. **Final da Sprint:** O que foi efetivamente entregue e testado deve ser transposto para as seções correspondentes do `DOCUMENTACAO.md` com a tag identificadora da Sprint (ex: `[Sprint X - Nome do Módulo]`).
+
+
+3. **Preservação de Histórico:** As entradas neste arquivo devem permanecer registradas para fins de auditoria.
+
+
+
+---
+
+## Guia de Registro por Sprint (Modelo para Preenchimento)
+
+---
+
+### [Sprint X] - Nome da Feature / Módulo Principal
+
+#### 1. Visão Geral e Mapeamento
+
+* **Data da Conclusão:** DD/MM/AAAA
+* **Mapeamento de Escopo:** Breve resumo das funcionalidades cobertas (ex: Manter Professores, Gerar Grade, etc.).
+
+#### 2. Alterações e Decisões de Negócio
+
+* **Decisões Tomadas:** Descrição de regras alteradas em relação aos requisitos e PDFs iniciais.
+
+
+* **Regras de Negócio e Validações:**
+* *Regra 1:* Detalhar validações inseridas no Backend/Services.
+* *Regra 2:* Restrições de mutação ou estados de entidades.
+
+
+
+#### 3. Impactos em Segurança e Perfis de Acesso
+
+* **Permissões:** Mapeamento de quem pode executar as novas rotas (`ROLE_TI`, `ROLE_RESPONSAVEL`).
+* **Regras de Bloqueio:** Validações de acesso ou exceções tratadas no fluxo de autorização.
+
+#### 4. Endpoints e Contratos da API
+
+Listagem das novas rotas ou alterações nos contratos existentes:
+
+* `MÉTODO /api/exemplo` — Descrição da rota e permissão exigida.
+* `MÉTODO /api/exemplo/{id}` — Descrição da rota e permissão exigida.
+
+#### 5. Banco de Dados e Persistência
+
+* **Migrations Flyway:** Lista de novos arquivos de migração criados (`V4__exemplo.sql`).
+* **Alterações de Schema:** Tabelas criadas, colunas alteradas ou relacionamentos ajustados.
+
+---
+
+### Registro de Sprints Anteriores
 
 ## 1. Alterações de Segurança e Usuários
 
@@ -218,53 +289,3 @@ Quando o sistema estiver próximo da finalização, a documentação deverá ser
 A documentação final deverá consolidar essas informações em um único documento técnico atualizado, removendo informações obsoletas, duplicidades e inconsistências.
 
 O objetivo é que a documentação final represente o sistema efetivamente implementado, e não apenas as decisões realizadas durante o planejamento.
-
-
-# CONFIGURAÇÕES DO BANCO DE DADOS
-
-# URL de conexão com o PostgreSQL
-spring.datasource.url=${DB_URL}
-
-# Usuário do banco
-spring.datasource.username=${DB_USERNAME}
-
-# Senha do banco
-spring.datasource.password=${DB_PASSWORD}
-
-# Driver usado para conectar ao PostgreSQL
-spring.datasource.driver-class-name=org.postgresql.Driver
-
-# JPA / HIBERNATE / FLAYWAR
-
-# Não altera automaticamente as tabelas do banco
-spring.jpa.hibernate.ddl-auto=update
-
-# Não exibe os comandos SQL no console
-spring.jpa.show-sql=false
-
-# Fecha a.md conexão com o banco após cada operação
-spring.jpa.open-in-view=false
-
-# Ativa o Flyway para gerenciamento das migrations.
-spring.flyway.enabled=true
-
-# Só se o banco já tiver tabelas criadas manualmente:
-# spring.flyway.baseline-on-migrate=true
-
-# LOGS
-
-# Mostra apenas erros do Hibernate
-logging.level.org.hibernate=ERROR
-
-# Esconde informações do pool de conexões
-logging.level.org.hibernate.orm.connections.pooling=ERROR
-
-#JWT
-
-# Chave secreta usada para assinar os tokens JWT.
-api.security.token.secret=${JWT_SECRET}
-
-# SERVER
-
-# Define a.md porta da aplicação
-server.port=8080

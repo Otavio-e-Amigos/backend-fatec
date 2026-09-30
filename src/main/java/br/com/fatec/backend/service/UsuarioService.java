@@ -112,7 +112,7 @@ public class UsuarioService {
     private String gerarLoginAutomatico(String nomeCompleto) {
         String[] partes = nomeCompleto.trim().toLowerCase().split("\\s+");
         String baseLogin = partes.length > 1
-                ? partes[0] + "." + partes[partes.length - 1] // Corrigido o erro de sintaxe aqui
+                ? partes[0] + "." + partes[partes.length - 1]
                 : partes[0];
 
         baseLogin = Normalizer.normalize(baseLogin, Normalizer.Form.NFD)

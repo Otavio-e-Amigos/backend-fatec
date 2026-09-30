@@ -1,5 +1,6 @@
 package br.com.fatec.backend.controller;
 
+import br.com.fatec.backend.dto.common.RespostaPadraoDTO;
 import br.com.fatec.backend.dto.usuario.UsuarioCreateDTO;
 import br.com.fatec.backend.dto.usuario.UsuarioResponseDTO;
 import br.com.fatec.backend.dto.usuario.UsuarioUpdateDTO;
@@ -25,69 +26,73 @@ public class UsuarioController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<UsuarioResponseDTO> meuPerfil(Authentication authentication) {
+    public ResponseEntity<RespostaPadraoDTO<UsuarioResponseDTO>> meuPerfil(Authentication authentication) {
         Long idUsuarioLogado = extrairIdUsuarioLogado(authentication);
-        return ResponseEntity.ok(service.buscarPorId(idUsuarioLogado));
+        UsuarioResponseDTO dados = service.buscarPorId(idUsuarioLogado);
+        return ResponseEntity.ok(RespostaPadraoDTO.sucesso("Perfil do usuário carregado com sucesso.", dados));
     }
 
     @PreAuthorize("hasRole('TI')")
     @GetMapping
-    public ResponseEntity<List<UsuarioResponseDTO>> listarTodos() {
-        return ResponseEntity.ok(service.listarTodos());
+    public ResponseEntity<RespostaPadraoDTO<List<UsuarioResponseDTO>>> listarTodos() {
+        List<UsuarioResponseDTO> usuarios = service.listarTodos();
+        return ResponseEntity.ok(RespostaPadraoDTO.sucesso("Lista de usuários obtida com sucesso.", usuarios));
     }
 
     @PreAuthorize("hasRole('TI')")
     @GetMapping("/{id}")
-    public ResponseEntity<UsuarioResponseDTO> buscarPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(service.buscarPorId(id));
+    public ResponseEntity<RespostaPadraoDTO<UsuarioResponseDTO>> buscarPorId(@PathVariable Long id) {
+        UsuarioResponseDTO dados = service.buscarPorId(id);
+        return ResponseEntity.ok(RespostaPadraoDTO.sucesso("Usuário encontrado com sucesso.", dados));
     }
 
     @PreAuthorize("hasRole('TI')")
     @PostMapping
-    public ResponseEntity<UsuarioResponseDTO> criar(@Valid @RequestBody UsuarioCreateDTO dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.criar(dto));
+    public ResponseEntity<RespostaPadraoDTO<UsuarioResponseDTO>> criar(@Valid @RequestBody UsuarioCreateDTO dto) {
+        UsuarioResponseDTO novoUsuario = service.criar(dto);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(RespostaPadraoDTO.criado("Usuário cadastrado com sucesso.", novoUsuario));
     }
 
     @PreAuthorize("hasRole('TI')")
     @PutMapping("/{id}")
-    public ResponseEntity<UsuarioResponseDTO> atualizar(@PathVariable Long id, @Valid @RequestBody UsuarioUpdateDTO dto) {
-        return ResponseEntity.ok(service.atualizar(id, dto));
+    public ResponseEntity<RespostaPadraoDTO<UsuarioResponseDTO>> atualizar(
+            @PathVariable Long id,
+            @Valid @RequestBody UsuarioUpdateDTO dto) {
+        UsuarioResponseDTO usuarioAtualizado = service.atualizar(id, dto);
+        return ResponseEntity.ok(RespostaPadraoDTO.sucesso("O usuário foi alterado com sucesso.", usuarioAtualizado));
     }
 
     @PreAuthorize("hasRole('TI')")
     @PatchMapping("/{id}/perfil")
-    public ResponseEntity<Void> alterarPerfil(
+    public ResponseEntity<RespostaPadraoDTO<Void>> alterarPerfil(
             @PathVariable Long id,
             @RequestParam Perfil novoPerfil,
             Authentication authentication) {
 
         Long idUsuarioLogado = extrairIdUsuarioLogado(authentication);
         service.alterarPerfil(id, novoPerfil, idUsuarioLogado);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(RespostaPadraoDTO.sucesso("Perfil do usuário alterado com sucesso."));
     }
 
     @PreAuthorize("hasRole('TI')")
     @PatchMapping("/{id}/ativar")
-    public ResponseEntity<Void> ativar(@PathVariable Long id) {
+    public ResponseEntity<RespostaPadraoDTO<Void>> ativar(@PathVariable Long id) {
         service.ativar(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(RespostaPadraoDTO.sucesso("O usuário foi ativado com sucesso."));
     }
 
     @PreAuthorize("hasRole('TI')")
     @PatchMapping("/{id}/desativar")
-    public ResponseEntity<Void> desativar(@PathVariable Long id) {
+    public ResponseEntity<RespostaPadraoDTO<Void>> desativar(@PathVariable Long id) {
         service.desativar(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(RespostaPadraoDTO.sucesso("O usuário foi desativado com sucesso."));
     }
 
-    /**
-     * Extrai o ID do usuário diretamente do objeto de Autenticação do Spring.
-     */
     private Long extrairIdUsuarioLogado(Authentication authentication) {
         if (authentication == null || authentication.getPrincipal() == null) {
             throw new RuntimeException("Usuário não autenticado.");
         }
-        // O JWT injetará o ID do usuário como String no "Principal" (configuraremos isso no JwtFilter)
         return Long.parseLong(authentication.getPrincipal().toString());
     }
 }

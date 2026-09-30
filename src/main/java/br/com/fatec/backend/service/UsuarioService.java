@@ -14,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.SecureRandom;
 import java.text.Normalizer;
 import java.util.List;
-import java.util.Random;
 
 @Service
 public class UsuarioService {
@@ -41,6 +40,7 @@ public class UsuarioService {
         return repository.findById(id)
                 .orElseThrow(() -> new RegraNegocioException("Usuário não encontrado com ID: " + id));
     }
+
 
     // Controla a operação no banco como uma única transação. (Essa operação com o banco deve ser tratada como uma única transação.)
     // Indica que a operação apenas consulta dados.
@@ -73,10 +73,17 @@ public class UsuarioService {
     public UsuarioResponseDTO atualizar(Long id, UsuarioUpdateDTO dto) {
         Usuario usuario = buscarEntidadePorId(id);
 
+        // Se uma nova senha for informada no DTO, gera o hash e atualiza
+        if (dto.novaSenha() != null && !dto.novaSenha().isBlank()) {
+            String novaSenhaHash = passwordEncoder.encode(dto.novaSenha());
+            usuario.atualizarSenha(novaSenhaHash);
+        }
+
         usuario.atualizarDados(dto.nome(), usuario.getLogin());
 
         return UsuarioResponseDTO.daEntidade(repository.save(usuario));
     }
+
     @Transactional
     public void alterarPerfil(Long idAlvo, Perfil novoPerfil, Long idUsuarioLogado) {
         if (idAlvo.equals(idUsuarioLogado)) {

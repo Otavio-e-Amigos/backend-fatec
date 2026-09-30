@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -33,6 +34,8 @@ public class AutenticacaoController {
 
         // 2. O Spring Security valida no banco usando o AutenticacaoService e o PasswordEncoder
         Authentication auth = this.authenticationManager.authenticate(usernamePassword);
+
+        System.out.println(new BCryptPasswordEncoder().encode("admin"));
 
         // 3. Busca a entidade original para extrair os dados extras (nome, ID, perfil)
         Usuario usuario = usuarioRepository.findByLogin(dados.login()).orElseThrow();

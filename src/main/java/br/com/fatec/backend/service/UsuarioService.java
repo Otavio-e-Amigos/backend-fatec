@@ -122,7 +122,7 @@ public class UsuarioService {
         String loginGerado;
         do {
             int numeroSufixo = secureRandom.nextInt(900) + 100;
-            loginGerado = baseLogin + numeroSufixo;
+            loginGerado = baseLogin + "." + numeroSufixo;
         } while (repository.existsByLogin(loginGerado));
 
         return loginGerado;

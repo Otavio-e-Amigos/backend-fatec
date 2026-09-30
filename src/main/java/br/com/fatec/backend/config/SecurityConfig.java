@@ -19,9 +19,15 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final SecurityFilter securityFilter;
+    private final CustomAccessDeniedHandler accessDeniedHandler;
+    private final CustomAuthenticationEntryPoint authenticationEntryPoint;
 
-    public SecurityConfig(SecurityFilter securityFilter) {
+    public SecurityConfig(SecurityFilter securityFilter,
+                          CustomAccessDeniedHandler accessDeniedHandler,
+                          CustomAuthenticationEntryPoint authenticationEntryPoint) {
         this.securityFilter = securityFilter;
+        this.accessDeniedHandler = accessDeniedHandler;
+        this.authenticationEntryPoint = authenticationEntryPoint;
     }
 
     @Bean
@@ -39,18 +45,32 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(ex -> ex
+                        .accessDeniedHandler(accessDeniedHandler) // Retorna 403 customizado
+                        .authenticationEntryPoint(authenticationEntryPoint) // Retorna 401 customizado
+                )
                 .authorizeHttpRequests(auth -> auth
-                        // Endpoints públicos
+                        // 1. Endpoints Públicos
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/api/autenticacao/**").permitAll()
 
-                        // Apenas TI gerencia a base de usuários
+                        // 2. Consulta de perfil próprio (Acessível por TI e RESPONSAVEL)
+                        .requestMatchers("/api/usuarios/me").authenticated()
+
+                        // 3. Gerenciamento de Usuários (EXCLUSIVO do perfil TI)
                         .requestMatchers("/api/usuarios/**").hasRole("TI")
 
-                        // Qualquer outro endpoint exige autenticação
+                        // -----------------------------------------------------------------------
+                        // [FUTURAS ROTAS OPERACIONAIS - PERMISSAO: TI E RESPONSAVEL]
+                        // Exemplo de mapeamento para as próximas Issues do sistema:
+                        // .requestMatchers("/api/professores/**").hasAnyRole("TI", "RESPONSAVEL")
+                        // .requestMatchers("/api/grades/**").hasAnyRole("TI", "RESPONSAVEL")
+                        // .requestMatchers("/api/folhas-frequencia/**").hasAnyRole("TI", "RESPONSAVEL")
+                        // -----------------------------------------------------------------------
+
+                        // 4. Qualquer outro endpoint exige autenticação por padrão
                         .anyRequest().authenticated()
                 )
-                // Adiciona nosso filtro JWT antes do filtro de autenticação padrão do Spring
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

@@ -1,14 +1,12 @@
-# Utiliza Java 21 para executar o backend
-FROM eclipse-temurin:21-jre
-
-# Define a.md pasta de trabalho dentro do container
+# Estágio 1: Build da aplicação
+FROM maven:3.9.6-eclipse-temurin-17 AS build
 WORKDIR /app
+COPY . .
+RUN mvn clean package -DskipTests
 
-# Copia o JAR gerado pelo Maven para dentro do container
-COPY target/backend-fatec-0.0.1-SNAPSHOT.jar app.jar
-
-# Informa que o backend utiliza a.md porta 8080
+# Estágio 2: Execução
+FROM eclipse-temurin:17-jdk-alpine
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
-
-# Inicia o Spring Boot quando o container for executado
 ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -1,7 +1,6 @@
 package br.com.fatec.backend.service;
 
 import br.com.fatec.backend.entity.Usuario;
-import br.com.fatec.backend.exception.RegraNegocioException;
 import br.com.fatec.backend.repository.UsuarioRepository;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -14,6 +13,7 @@ import java.util.List;
 
 @Service
 public class AutenticacaoService implements UserDetailsService {
+
     private final UsuarioRepository repository;
 
     public AutenticacaoService(UsuarioRepository repository) {
@@ -23,11 +23,7 @@ public class AutenticacaoService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Usuario usuario = repository.findByLogin(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuário ou senha inválidos"));
-
-        if (!usuario.isAtivo()) {
-            throw new RegraNegocioException("Usuário inativo. Contate o administrador.");
-        }
+                .orElseThrow(() -> new UsernameNotFoundException("Usuário inexistente ou senha inválida."));
 
         return new User(
                 usuario.getLogin(),

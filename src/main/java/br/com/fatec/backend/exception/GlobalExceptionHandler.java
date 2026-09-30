@@ -3,6 +3,10 @@ package br.com.fatec.backend.exception;
 import br.com.fatec.backend.dto.common.RespostaPadraoDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -10,7 +14,23 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Trata erros de regras de negócio (ex: usuário não encontrado, login duplicado)
+    // Trata especificamente o login de Usuário Desativado (Code 403)
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<RespostaPadraoDTO<Void>> handleDisabledException(DisabledException ex) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(RespostaPadraoDTO.erro(ex.getMessage(), HttpStatus.FORBIDDEN.value()));
+    }
+
+    // Trata erro de Login Inválido (Usuário inexistente ou Senha Incorreta)
+    @ExceptionHandler({BadCredentialsException.class, UsernameNotFoundException.class, InternalAuthenticationServiceException.class})
+    public ResponseEntity<RespostaPadraoDTO<Void>> handleAuthenticationException() {
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(RespostaPadraoDTO.erro("Usuário inexistente ou senha inválida.", HttpStatus.UNAUTHORIZED.value()));
+    }
+
+    // Trata erros de regras de negócio da aplicação
     @ExceptionHandler(RegraNegocioException.class)
     public ResponseEntity<RespostaPadraoDTO<Void>> handleRegraNegocioException(RegraNegocioException ex) {
         return ResponseEntity
@@ -18,7 +38,7 @@ public class GlobalExceptionHandler {
                 .body(RespostaPadraoDTO.erro(ex.getMessage(), HttpStatus.BAD_REQUEST.value()));
     }
 
-    // Trata erros de validação do @Valid (@NotBlank, etc.)
+    // Trata erros de validação do @Valid
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<RespostaPadraoDTO<Void>> handleValidationException(MethodArgumentNotValidException ex) {
         String mensagem = ex.getBindingResult().getFieldErrors().stream()
@@ -31,7 +51,7 @@ public class GlobalExceptionHandler {
                 .body(RespostaPadraoDTO.erro(mensagem, HttpStatus.BAD_REQUEST.value()));
     }
 
-    // Trata erros genéricos/inesperados do servidor (Erro 500)
+    // Trata erros genéricos / inesperados do servidor (Erro 500)
     @ExceptionHandler(Exception.class)
     public ResponseEntity<RespostaPadraoDTO<Void>> handleGenericException(Exception ex) {
         return ResponseEntity

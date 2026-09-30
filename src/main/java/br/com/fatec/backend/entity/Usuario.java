@@ -58,6 +58,10 @@ public class Usuario {
         this.perfil = novoPerfil;
     }
 
+    public void atualizarSenha(String novaSenhaHash) {
+        this.senhaHash = novaSenhaHash; // CORRIGIDO: Atribui a nova senha recebida
+    }
+
     public void ativar() {
         this.ativo = true;
     }

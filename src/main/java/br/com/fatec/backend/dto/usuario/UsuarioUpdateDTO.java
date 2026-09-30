@@ -7,5 +7,7 @@ import jakarta.validation.constraints.NotBlank;
  */
 public record UsuarioUpdateDTO(
         @NotBlank(message = "O nome é obrigatório")
-        String nome
+        String nome,
+
+        String novaSenha
 ) {}

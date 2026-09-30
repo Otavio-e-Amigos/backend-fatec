@@ -218,3 +218,53 @@ Quando o sistema estiver próximo da finalização, a documentação deverá ser
 A documentação final deverá consolidar essas informações em um único documento técnico atualizado, removendo informações obsoletas, duplicidades e inconsistências.
 
 O objetivo é que a documentação final represente o sistema efetivamente implementado, e não apenas as decisões realizadas durante o planejamento.
+
+
+# CONFIGURAÇÕES DO BANCO DE DADOS
+
+# URL de conexão com o PostgreSQL
+spring.datasource.url=${DB_URL}
+
+# Usuário do banco
+spring.datasource.username=${DB_USERNAME}
+
+# Senha do banco
+spring.datasource.password=${DB_PASSWORD}
+
+# Driver usado para conectar ao PostgreSQL
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+# JPA / HIBERNATE / FLAYWAR
+
+# Não altera automaticamente as tabelas do banco
+spring.jpa.hibernate.ddl-auto=update
+
+# Não exibe os comandos SQL no console
+spring.jpa.show-sql=false
+
+# Fecha a.md conexão com o banco após cada operação
+spring.jpa.open-in-view=false
+
+# Ativa o Flyway para gerenciamento das migrations.
+spring.flyway.enabled=true
+
+# Só se o banco já tiver tabelas criadas manualmente:
+# spring.flyway.baseline-on-migrate=true
+
+# LOGS
+
+# Mostra apenas erros do Hibernate
+logging.level.org.hibernate=ERROR
+
+# Esconde informações do pool de conexões
+logging.level.org.hibernate.orm.connections.pooling=ERROR
+
+#JWT
+
+# Chave secreta usada para assinar os tokens JWT.
+api.security.token.secret=${JWT_SECRET}
+
+# SERVER
+
+# Define a.md porta da aplicação
+server.port=8080

@@ -28,6 +28,8 @@ services:
       # Senha do PostgreSQL
       DB_PASSWORD: postgres
 
+      JWT_SECRET: ${JWT_SECRET}
+
     # Garante que o banco seja iniciado antes do backend
     depends_on:
       - postgres
@@ -53,6 +55,7 @@ services:
 
       # Nome do banco
       POSTGRES_DB: backend_fatec
+
 
     # Porta do computador : porta do PostgreSQL
     ports:

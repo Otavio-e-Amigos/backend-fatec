@@ -1,5 +1,6 @@
 package br.com.fatec.backend.service;
 
+import br.com.fatec.backend.dto.professor.ProfessorAtualizacaoDTO;
 import br.com.fatec.backend.dto.professor.ProfessorRequisicaoDTO;
 import br.com.fatec.backend.dto.professor.ProfessorRespostaDTO;
 import br.com.fatec.backend.entity.Professor;
@@ -8,6 +9,7 @@ import br.com.fatec.backend.exception.ConflitoException;
 import br.com.fatec.backend.exception.RegraNegocioException;
 import br.com.fatec.backend.exception.RecursoNaoEncontradoException;
 import br.com.fatec.backend.repository.ProfessorRepository;
+import jakarta.validation.Valid;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -84,33 +86,63 @@ public class ProfessorService {
     @Transactional
     public ProfessorRespostaDTO atualizar(
             Long id,
-            ProfessorRequisicaoDTO requisicao) {
+            ProfessorAtualizacaoDTO requisicao) {
 
         Professor professor = buscarEntidadePorId(id);
 
-        String cpf = normalizarCpf(requisicao.cpf());
-
-        validarCpf(cpf);
-
-        if (repository.existsByCpfAndIdNot(cpf, id)) {
-            throw new ConflitoException("CPF já cadastrado.");
+        if (requisicao.nome() != null) {
+            professor.atualizarNome(requisicao.nome());
         }
 
-        if (repository.existsByMatriculaAndIdNot(
-                requisicao.matricula(), id)) {
-
-            throw new ConflitoException("Matrícula já cadastrada.");
+        if (requisicao.codigo() != null) {
+            professor.atualizarCodigo(requisicao.codigo());
         }
 
-        professor.atualizarDados(
-                requisicao.nome(),
-                requisicao.codigo(),
-                cpf,
-                requisicao.matricula(),
-                requisicao.regimeContrato(),
-                requisicao.regimeJuridico(),
-                requisicao.titulacao()
-        );
+        if (requisicao.cpf() != null) {
+            String cpf = normalizarCpf(requisicao.cpf());
+
+            validarCpf(cpf);
+
+            if (repository.existsByCpfAndIdNot(cpf, id)) {
+                throw new ConflitoException("CPF já cadastrado.");
+            }
+
+            professor.atualizarCpf(cpf);
+        }
+
+        if (requisicao.matricula() != null) {
+            if (repository.existsByMatriculaAndIdNot(
+                    requisicao.matricula(), id)) {
+
+                throw new ConflitoException("Matrícula já cadastrada.");
+            }
+
+            professor.atualizarMatricula(requisicao.matricula());
+        }
+
+        if (requisicao.regimeContrato() != null) {
+            professor.atualizarRegimeContrato(
+                    requisicao.regimeContrato()
+            );
+        }
+
+        if (requisicao.regimeJuridico() != null) {
+            professor.atualizarRegimeJuridico(
+                    requisicao.regimeJuridico()
+            );
+        }
+
+        if (requisicao.status() != null) {
+            professor.atualizarStatus(
+                    requisicao.status()
+            );
+        }
+
+        if (requisicao.titulacao() != null) {
+            professor.atualizarTitulacao(
+                    requisicao.titulacao()
+            );
+        }
 
         Professor atualizado = repository.save(professor);
 

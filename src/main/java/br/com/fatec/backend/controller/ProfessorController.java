@@ -5,6 +5,7 @@ import br.com.fatec.backend.dto.professor.ProfessorRequisicaoDTO;
 import br.com.fatec.backend.dto.professor.ProfessorRespostaDTO;
 import br.com.fatec.backend.service.ProfessorService;
 import jakarta.validation.Valid;
+import br.com.fatec.backend.dto.professor.ProfessorAtualizacaoDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -70,10 +71,9 @@ public class ProfessorController {
     @PutMapping("/{id}")
     public ResponseEntity<RespostaPadraoDTO<ProfessorRespostaDTO>> atualizar(
             @PathVariable Long id,
-            @Valid @RequestBody ProfessorRequisicaoDTO requisicao) {
+            @Valid @RequestBody ProfessorAtualizacaoDTO requisicao) {
 
-        ProfessorRespostaDTO professorAtualizado =
-                service.atualizar(id, requisicao);
+        ProfessorRespostaDTO professorAtualizado = service.atualizar(id, requisicao);
 
         return ResponseEntity.ok(
                 RespostaPadraoDTO.sucesso(

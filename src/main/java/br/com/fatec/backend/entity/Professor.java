@@ -104,4 +104,35 @@ public class Professor {
         return titulacao;
     }
 
+    public void atualizarNome(String nome) {
+        this.nome = nome;
+    }
+
+    public void atualizarCodigo(String codigo) {
+        this.codigo = codigo;
+    }
+
+    public void atualizarCpf(String cpf) {
+        this.cpf = cpf;
+    }
+
+    public void atualizarMatricula(String matricula) {
+        this.matricula = matricula;
+    }
+
+    public void atualizarRegimeContrato(RegimeContrato regimeContrato) {
+        this.regimeContrato = regimeContrato;
+    }
+
+    public void atualizarRegimeJuridico(String regimeJuridico) {
+        this.regimeJuridico = regimeJuridico;
+    }
+
+    public void atualizarStatus(StatusProfessor status) {
+        this.status = status;
+    }
+
+    public void atualizarTitulacao(Titulacao titulacao) {
+        this.titulacao = titulacao;
+    }
 }

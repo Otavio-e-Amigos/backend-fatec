@@ -1,18 +1,17 @@
 package br.com.fatec.backend.service;
 
-import br.com.fatec.backend.dto.professor.ProfessorAtualizacaoDTO;
 import br.com.fatec.backend.dto.professor.ProfessorRequisicaoDTO;
 import br.com.fatec.backend.dto.professor.ProfessorRespostaDTO;
 import br.com.fatec.backend.entity.Professor;
 import br.com.fatec.backend.entity.StatusProfessor;
 import br.com.fatec.backend.exception.ConflitoException;
-import br.com.fatec.backend.exception.RegraNegocioException;
 import br.com.fatec.backend.exception.RecursoNaoEncontradoException;
 import br.com.fatec.backend.repository.ProfessorRepository;
-import jakarta.validation.Valid;
+import br.com.fatec.backend.specification.ProfessorSpecs;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 
 @Service
@@ -24,180 +23,98 @@ public class ProfessorService {
         this.repository = repository;
     }
 
-    private Professor buscarEntidadePorId(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() ->
-                        new RecursoNaoEncontradoException(
-                                "Professor não encontrado com ID: " + id
-                        )
-                );
-    }
-
     @Transactional(readOnly = true)
     public List<ProfessorRespostaDTO> listarTodos() {
-        return repository.findAll()
-                .stream()
-                .map(ProfessorRespostaDTO::daEntidade)
+        return repository.findAll().stream()
+                .map(ProfessorRespostaDTO::daEntidadeComCpfMascarado)
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public ProfessorRespostaDTO buscarPorId(Long id) {
-        return ProfessorRespostaDTO.daEntidade(
-                buscarEntidadePorId(id)
-        );
+        return ProfessorRespostaDTO.daEntidadeCompleta(buscarEntidadePorId(id));
     }
 
     @Transactional
     public ProfessorRespostaDTO criar(ProfessorRequisicaoDTO requisicao) {
-
         String cpf = normalizarCpf(requisicao.cpf());
+        String matricula = requisicao.matricula().trim();
 
-        validarCpf(cpf);
-
-        if (repository.existsByCpf(cpf)) {
-            throw new ConflitoException("CPF já cadastrado.");
-        }
-
-        if (repository.existsByMatricula(requisicao.matricula())) {
-            throw new ConflitoException("Matrícula já cadastrada.");
-        }
-
-        StatusProfessor status = requisicao.status() != null
-                ? requisicao.status()
-                : StatusProfessor.ATIVO;
+        validarUnicidade(cpf, matricula, null);
 
         Professor professor = new Professor(
-                requisicao.nome(),
-                requisicao.codigo(),
+                requisicao.nome().trim(),
+                normalizarOpcional(requisicao.codigo()),
                 cpf,
-                requisicao.matricula(),
+                matricula,
                 requisicao.regimeContrato(),
                 requisicao.regimeJuridico(),
-                status,
                 requisicao.titulacao()
         );
 
-        Professor salvo = repository.save(professor);
-
-        return ProfessorRespostaDTO.daEntidade(salvo);
+        return ProfessorRespostaDTO.daEntidadeCompleta(repository.save(professor));
     }
 
     @Transactional
-    public ProfessorRespostaDTO atualizar(
-            Long id,
-            ProfessorAtualizacaoDTO requisicao) {
-
+    public ProfessorRespostaDTO atualizar(Long id, ProfessorRequisicaoDTO requisicao) {
         Professor professor = buscarEntidadePorId(id);
 
-        if (requisicao.nome() != null) {
-            professor.atualizarNome(requisicao.nome());
-        }
+        String cpf = normalizarCpf(requisicao.cpf());
+        String matricula = requisicao.matricula().trim();
 
-        if (requisicao.codigo() != null) {
-            professor.atualizarCodigo(requisicao.codigo());
-        }
+        validarUnicidade(cpf, matricula, id);
 
-        if (requisicao.cpf() != null) {
-            String cpf = normalizarCpf(requisicao.cpf());
+        professor.atualizarDados(
+                requisicao.nome().trim(),
+                normalizarOpcional(requisicao.codigo()),
+                cpf,
+                matricula,
+                requisicao.regimeContrato(),
+                requisicao.regimeJuridico(),
+                requisicao.titulacao()
+        );
 
-            validarCpf(cpf);
+        return ProfessorRespostaDTO.daEntidadeCompleta(professor);
+    }
 
-            if (repository.existsByCpfAndIdNot(cpf, id)) {
-                throw new ConflitoException("CPF já cadastrado.");
-            }
-
-            professor.atualizarCpf(cpf);
-        }
-
-        if (requisicao.matricula() != null) {
-            if (repository.existsByMatriculaAndIdNot(
-                    requisicao.matricula(), id)) {
-
-                throw new ConflitoException("Matrícula já cadastrada.");
-            }
-
-            professor.atualizarMatricula(requisicao.matricula());
-        }
-
-        if (requisicao.regimeContrato() != null) {
-            professor.atualizarRegimeContrato(
-                    requisicao.regimeContrato()
-            );
-        }
-
-        if (requisicao.regimeJuridico() != null) {
-            professor.atualizarRegimeJuridico(
-                    requisicao.regimeJuridico()
-            );
-        }
-
-        if (requisicao.status() != null) {
-            professor.atualizarStatus(
-                    requisicao.status()
-            );
-        }
-
-        if (requisicao.titulacao() != null) {
-            professor.atualizarTitulacao(
-                    requisicao.titulacao()
-            );
-        }
-
-        Professor atualizado = repository.save(professor);
-
-        return ProfessorRespostaDTO.daEntidade(atualizado);
+    @Transactional(readOnly = true)
+    public Page<ProfessorRespostaDTO> listar(String busca, Pageable pageable) {
+        return repository.findAll(ProfessorSpecs.buscarPorNomeOuMatricula(busca), pageable)
+                .map(ProfessorRespostaDTO::daEntidadeComCpfMascarado);
     }
 
     @Transactional
-    public void ativar(Long id) {
-        Professor professor = buscarEntidadePorId(id);
-        professor.ativar();
-        repository.save(professor);
+    public void alterarStatus(Long id, StatusProfessor status) {
+        buscarEntidadePorId(id).alterarStatus(status);
     }
 
-    @Transactional
-    public void desativar(Long id) {
-        Professor professor = buscarEntidadePorId(id);
-        professor.desativar();
-        repository.save(professor);
+    private Professor buscarEntidadePorId(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException(
+                        "Professor não encontrado com ID: " + id));
+    }
+
+    private void validarUnicidade(String cpf, String matricula, Long idAtual) {
+        boolean cpfEmUso = repository.findByCpf(cpf)
+                .filter(outro -> !outro.getId().equals(idAtual))
+                .isPresent();
+        if (cpfEmUso) {
+            throw new ConflitoException("CPF já cadastrado.");
+        }
+
+        boolean matriculaEmUso = repository.findByMatricula(matricula)
+                .filter(outro -> !outro.getId().equals(idAtual))
+                .isPresent();
+        if (matriculaEmUso) {
+            throw new ConflitoException("Matrícula já cadastrada.");
+        }
     }
 
     private String normalizarCpf(String cpf) {
         return cpf.replaceAll("\\D", "");
     }
 
-    /*private void validarCpf(String cpf) {
-
-        if (cpf.length() != 11 || cpf.matches("(\\d)\\1{10}")) {
-            throw new RegraNegocioException("CPF inválido.");
-        }
-
-        int primeiroDigito = calcularDigitoCpf(cpf, 9);
-        int segundoDigito = calcularDigitoCpf(cpf, 10);
-
-        if (primeiroDigito != Character.getNumericValue(cpf.charAt(9))
-                || segundoDigito != Character.getNumericValue(cpf.charAt(10))) {
-            throw new RegraNegocioException("CPF inválido.");
-        }
-    }
-
-    private int calcularDigitoCpf(String cpf, int quantidadeDigitos) {
-
-        int soma = 0;
-        int peso = quantidadeDigitos + 1;
-
-        for (int i = 0; i < quantidadeDigitos; i++) {
-            soma += Character.getNumericValue(cpf.charAt(i)) * (peso - i);
-        }
-
-        int resto = soma % 11;
-
-        return resto < 2 ? 0 : 11 - resto;
-    }*/
-    private void validarCpf(String cpf) {
-        if (!cpf.matches("\\d{11}")) {
-            throw new RegraNegocioException("CPF inválido.");
-        }
+    private String normalizarOpcional(String texto) {
+        return (texto == null || texto.isBlank()) ? null : texto.trim();
     }
 }

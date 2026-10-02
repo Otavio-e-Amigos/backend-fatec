@@ -1,4 +1,6 @@
-Abaixo está a versão reformulada do seu **`ALTERACOES.md`**. Esta estrutura remove os detalhes específicos da Sprint 1 e atua estritamente como um **template e guia de processo reutilizável** para registrar os avanços e mudanças das próximas sprints.
+Aqui está a versão completa e atualizada do seu arquivo **`ALTERACOES.md`**, já com as anotações do módulo de Professores adicionadas como **Sprint 2**, seguindo exatamente a estrutura e o template do seu guia.
+
+Você pode copiar o conteúdo abaixo e substituir no seu arquivo.
 
 ---
 
@@ -23,14 +25,8 @@ docs/
 ```
 
 1. **Durante a Sprint:** Qualquer nova regra, endpoint criado ou ajuste arquitetural deve ser anotado neste arquivo (`ALTERACOES.md`).
-
-
 2. **Final da Sprint:** O que foi efetivamente entregue e testado deve ser transposto para as seções correspondentes do `DOCUMENTACAO.md` com a tag identificadora da Sprint (ex: `[Sprint X - Nome do Módulo]`).
-
-
 3. **Preservação de Histórico:** As entradas neste arquivo devem permanecer registradas para fins de auditoria.
-
-
 
 ---
 
@@ -38,18 +34,18 @@ docs/
 
 ---
 
-### [Sprint X] - Nome da Feature / Módulo Principal
+* ### [Sprint X] Nome da Feature / Módulo Principal
+
+
 
 #### 1. Visão Geral e Mapeamento
 
 * **Data da Conclusão:** DD/MM/AAAA
-* **Mapeamento de Escopo:** Breve resumo das funcionalidades cobertas (ex: Manter Professores, Gerar Grade, etc.).
+* **Mapeamento de Escopo:** Breve resumo das funcionalidades cobertas.
 
 #### 2. Alterações e Decisões de Negócio
 
 * **Decisões Tomadas:** Descrição de regras alteradas em relação aos requisitos e PDFs iniciais.
-
-
 * **Regras de Negócio e Validações:**
 * *Regra 1:* Detalhar validações inseridas no Backend/Services.
 * *Regra 2:* Restrições de mutação ou estados de entidades.
@@ -66,7 +62,6 @@ docs/
 Listagem das novas rotas ou alterações nos contratos existentes:
 
 * `MÉTODO /api/exemplo` — Descrição da rota e permissão exigida.
-* `MÉTODO /api/exemplo/{id}` — Descrição da rota e permissão exigida.
 
 #### 5. Banco de Dados e Persistência
 
@@ -75,14 +70,65 @@ Listagem das novas rotas ou alterações nos contratos existentes:
 
 ---
 
-### Registro de Sprints Anteriores
+## Registro de Sprints Anteriores
 
-## 1. Alterações de Segurança e Usuários
+---
 
-### 1.1 Perfis de acesso
+### [Sprint 2] Manter Professores (Docentes)
+
+#### 1. Visão Geral e Mapeamento
+
+* **Data da Conclusão:** 02/10/2026
+* **Mapeamento de Escopo:** Cadastro, edição, listagem e inativação de Professores (Docentes) do sistema, com validações rigorosas de dados sensíveis e enums.
+
+#### 2. Alterações e Decisões de Negócio
+
+* **Decisões Tomadas:**
+* **Enums explícitos:** O `RegimeJuridico` passou a ser um `Enum` (CLT, PSS) no código para garantir consistência, substituindo o uso de `String` livre.
+* **Nova Titulação:** Inclusão do valor `POS_DOUTOR` na regra de Titulação.
+* **Edição Completa (PUT):** O endpoint de atualização (`PUT`) realiza a *substituição completa* dos dados (exceto o id). Não atua como `PATCH` (ignorar nulos). Todos os dados do professor devem ser reenviados no payload.
+* **Status centralizado:** Em vez de dois endpoints separados (`/ativar` e `/desativar`), optou-se por um único endpoint genérico `PATCH /status` recebendo a intenção no corpo (ATIVO, INATIVO, AFASTADO).
+
+
+* **Regras de Negócio e Validações:**
+* *Regra 1 (Privacidade do CPF):* O CPF não é devolvido na listagem geral de professores para evitar exposição de dados pessoais. Ele é retornado apenas na busca individual (`GET /{id}`), criação (`POST`) e atualização (`PUT`).
+* *Regra 2 (Tamanho de colunas):* Os campos `codigo` e `matricula` foram limitados a no máximo 10 caracteres tanto na validação (DTO) quanto no banco de dados.
+
+
+
+#### 3. Impactos em Segurança e Perfis de Acesso
+
+* **Permissões:**
+* Toda a rota `/api/professores/**` foi protegida.
+* O acesso é permitido exclusivamente aos perfis `TI` e `RESPONSAVEL` (`hasAnyRole("TI", "RESPONSAVEL")`).
+
+
+
+#### 4. Endpoints e Contratos da API
+
+* `GET /api/professores` — Lista todos os professores. CPF é omitido (`null`) no payload de retorno. Exige `TI` ou `RESPONSAVEL`.
+* `GET /api/professores/{id}` — Detalha um professor específico. Retorna o CPF. Exige `TI` ou `RESPONSAVEL`.
+* `POST /api/professores` — Cria um novo professor (Status inicial é forçado como `ATIVO`). Exige `TI` ou `RESPONSAVEL`.
+* `PUT /api/professores/{id}` — Atualização completa dos dados do professor. Exige `TI` ou `RESPONSAVEL`.
+* `PATCH /api/professores/{id}/status` — Altera apenas o status do professor (ATIVO, INATIVO, AFASTADO). Exige `TI` ou `RESPONSAVEL`.
+
+#### 5. Banco de Dados e Persistência
+
+* **Migrations Flyway:** O script da tabela `professor` foi criado  `V4__criacao_professor.sql`.
+* **Alterações de Schema:**
+* Tabela `professor` criada com mapeamento estrito.
+* Adição de `CONSTRAINT UNIQUE` para `cpf` e `matricula`.
+* Adição de `CONSTRAINT CHECK` no banco para validar o formato do CPF (`^[0-9]{11}$`) e os valores textuais restritos dos enums `regime_contrato`, `regime_juridico`, `status` e `titulacao`.
+
+
+
+---
+
+### [Sprint 1] Alterações de Segurança e Usuários
+
+#### 1.1 Perfis de acesso
 
 **Situação anterior:**
-
 A documentação inicial considerava os perfis:
 
 * RESPONSAVEL
@@ -90,7 +136,6 @@ A documentação inicial considerava os perfis:
 * ACOMPANHAMENTO
 
 **Alteração definida:**
-
 O sistema passará a utilizar somente dois perfis:
 
 * `TI`
@@ -98,10 +143,9 @@ O sistema passará a utilizar somente dois perfis:
 
 O perfil `ACOMPANHAMENTO` não será implementado, pois suas funções serão consideradas parte das responsabilidades do perfil `RESPONSAVEL`.
 
-### 1.2 Responsabilidades dos perfis
+#### 1.2 Responsabilidades dos perfis
 
-#### TI
-
+**TI**
 O perfil `TI` terá acesso geral ao sistema e será o único perfil autorizado a:
 
 * cadastrar novos usuários;
@@ -110,8 +154,7 @@ O perfil `TI` terá acesso geral ao sistema e será o único perfil autorizado a
 * ativar e desativar usuários;
 * realizar manutenção relacionada às contas de acesso.
 
-#### RESPONSAVEL
-
+**RESPONSAVEL**
 O perfil `RESPONSAVEL` terá acesso às operações administrativas e acadêmicas do sistema, incluindo:
 
 * cadastrar e gerenciar professores;
@@ -122,9 +165,7 @@ O perfil `RESPONSAVEL` terá acesso às operações administrativas e acadêmica
 
 Usuários `RESPONSAVEL` não poderão alterar o próprio perfil ou suas permissões.
 
----
-
-## 2. Autenticação e Segurança
+#### 1.3 Autenticação e Segurança
 
 A autenticação e a segurança da aplicação serão implementadas utilizando **Spring Security**.
 
@@ -137,39 +178,22 @@ O sistema utilizará:
 * controle de acesso baseado nos perfis `TI` e `RESPONSAVEL`;
 * validação das permissões no backend.
 
-O Spring Security será responsável por proteger os endpoints da API, validar a autenticação dos usuários e aplicar as regras de autorização definidas para cada perfil.
+O Spring Security será responsável por proteger os endpoints da API, validar a autenticação dos usuários e aplicar as regras de autorização definidas para cada perfil. O frontend não será responsável sozinho por impedir o acesso às funcionalidades. As permissões deverão ser obrigatoriamente validadas no backend.
 
-O frontend não será responsável sozinho por impedir o acesso às funcionalidades. As permissões deverão ser obrigatoriamente validadas no backend.
+**JWT**
+Após uma autenticação válida, o sistema utilizará um token JWT para identificar o usuário nas requisições seguintes. As requisições protegidas deverão enviar o token no cabeçalho de autorização:
+`Authorization: Bearer <token>`
 
-### Perfis de acesso
-
-* `TI`: acesso geral e gerenciamento dos usuários e suas permissões.
-* `RESPONSAVEL`: acesso às funcionalidades operacionais e administrativas permitidas pelo sistema.
-
-### JWT
-
-Após uma autenticação válida, o sistema utilizará um token JWT para identificar o usuário nas requisições seguintes.
-
-As requisições protegidas deverão enviar o token no cabeçalho de autorização:
-
-```text
-Authorization: Bearer <token>
-```
-
-O Spring Security será responsável por processar a autenticação das requisições e aplicar as regras de autorização correspondentes ao usuário autenticado.
-
----
-
-## 3. API de Autenticação e Usuários
+#### 1.4 API de Autenticação e Usuários
 
 As rotas relacionadas à autenticação e gerenciamento de usuários utilizarão nomenclatura em português.
 
-### Autenticação
+**Autenticação**
 
 * `POST /api/autenticacao/login`
 * `GET /api/autenticacao/me`
 
-### Usuários
+**Usuários**
 
 * `GET /api/usuarios`
 * `GET /api/usuarios/{id}`
@@ -179,14 +203,9 @@ As rotas relacionadas à autenticação e gerenciamento de usuários utilizarão
 * `PATCH /api/usuarios/{id}/desativar`
 * `PATCH /api/usuarios/{id}/perfil`
 
----
+#### 1.5 Banco de Dados e Migrations
 
-## 4. Banco de Dados e Migrations
-
-O projeto utilizará migrations versionadas para controlar a evolução do banco de dados.
-
-A ferramenta definida para isso é o **Flyway**.
-
+O projeto utilizará migrations versionadas para controlar a evolução do banco de dados utilizando **Flyway**.
 As migrations deverão:
 
 * ser versionadas;
@@ -195,24 +214,11 @@ As migrations deverão:
 * permitir que o banco seja criado/evoluído de forma controlada;
 * evitar a necessidade de criação manual das tabelas a cada ambiente.
 
-Exemplo de estrutura:
-
-```text
-src/main/resources/db/migration/
-├── V1__criacao_inicial.sql
-├── V2__criacao_usuario.sql
-└── V3__alteracao_usuario.sql
-```
-
 O Hibernate/JPA não deverá ser utilizado como mecanismo principal para controlar a evolução do schema em ambientes finais. A evolução estrutural do banco deverá ser controlada pelas migrations.
 
----
+#### 1.6 Organização da Documentação
 
-## 5. Organização da Documentação
-
-Os documentos técnicos existentes em PDF serão mantidos como referência durante o desenvolvimento.
-
-A documentação editável ficará organizada da seguinte forma:
+Os documentos técnicos existentes em PDF serão mantidos como referência durante o desenvolvimento. A documentação editável ficará organizada da seguinte forma:
 
 ```text
 docs/
@@ -221,13 +227,8 @@ docs/
 ├── Documentacao_Tecnica_Banco_de_Dados_FATEC.pdf
 ├── Documentacao_Tecnica_da_Grade.pdf
 └── Documentacao_Tecnica_Folha_de_Frequencia.pdf
+
 ```
-
-O `DOCUMENTACAO.md` representa a documentação técnica evolutiva do projeto.
-
-O `ALTERACOES.md` registra mudanças relevantes realizadas após a criação dos documentos PDF.
-
-Os PDFs não precisam ser alterados a cada mudança durante o desenvolvimento.
 
 ---
 

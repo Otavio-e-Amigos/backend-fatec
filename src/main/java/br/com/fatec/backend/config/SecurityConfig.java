@@ -71,27 +71,26 @@ public class SecurityConfig {
                         .authenticationEntryPoint(authenticationEntryPoint) // Retorna 401 customizado
                 )
                 .authorizeHttpRequests(auth -> auth
-                        // 1. Endpoints Públicos
+                        // 1. Swagger e Health Check
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers(HttpMethod.GET, "/").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/autenticacao/login").permitAll()
-                        .requestMatchers("/api/autenticacao/**").permitAll()
-
-                        // 2. Consulta de perfil próprio (Acessível por TI e RESPONSAVEL)
+                        // 2. Regra ESPECÍFICA de Autenticação (exige Token JWT)
                         .requestMatchers("/api/autenticacao/me").authenticated()
-
-                        // 3. Gerenciamento de Usuários (EXCLUSIVO do perfil TI)
+                        // 3. Regra GENÉRICA de Autenticação (Login e outras rotas públicas do módulo)
+                        .requestMatchers("/api/autenticacao/**").permitAll()
+                        // 4. Gerenciamento de Usuários (EXCLUSIVO do perfil TI)
                         .requestMatchers("/api/usuarios/**").hasRole("TI")
-
+                        // 5. Gerenciamento de Professor (AMBOS para os perfilis TI)
+                        .requestMatchers("/api/professores/**").hasAnyRole("TI", "RESPONSAVEL")
                         // -----------------------------------------------------------------------
                         // [FUTURAS ROTAS OPERACIONAIS - PERMISSAO: TI E RESPONSAVEL]
                         // Exemplo de mapeamento para as próximas Issues do sistema:
-                        // .requestMatchers("/api/professores/**").hasAnyRole("TI", "RESPONSAVEL")
+                        //
                         // .requestMatchers("/api/grades/**").hasAnyRole("TI", "RESPONSAVEL")
                         // .requestMatchers("/api/folhas-frequencia/**").hasAnyRole("TI", "RESPONSAVEL")
                         // -----------------------------------------------------------------------
 
-                        // 4. Qualquer outro endpoint exige autenticação por padrão
+                        // 5. Qualquer outro endpoint exige autenticação por padrão
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);

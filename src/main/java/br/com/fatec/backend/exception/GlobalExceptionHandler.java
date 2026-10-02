@@ -10,9 +10,17 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(DisabledException.class)
     public ResponseEntity<RespostaPadraoDTO<Void>> handleDisabledException(DisabledException ex) {
@@ -74,6 +82,31 @@ public class GlobalExceptionHandler {
                 ));
     }
 
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<RespostaPadraoDTO<Void>> handleCorpoInvalido() {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(RespostaPadraoDTO.erro(
+                        "Corpo da requisição inválido ou com valor não reconhecido.",
+                        HttpStatus.BAD_REQUEST.value()));
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<RespostaPadraoDTO<Void>> handleAcessoNegado() {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(RespostaPadraoDTO.erro(
+                        "Acesso negado: você não tem permissão para esta operação.",
+                        HttpStatus.FORBIDDEN.value()));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<RespostaPadraoDTO<Void>> handleIntegridade(DataIntegrityViolationException ex) {
+        log.warn("Violação de integridade no banco: {}", ex.getClass().getSimpleName());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(RespostaPadraoDTO.erro(
+                        "Os dados enviados conflitam com um registro existente.",
+                        HttpStatus.CONFLICT.value()));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<RespostaPadraoDTO<Void>> handleValidationException(
             MethodArgumentNotValidException ex) {
@@ -94,14 +127,11 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<RespostaPadraoDTO<Void>> handleGenericException(
-            Exception ex) {
-
-        return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ResponseEntity<RespostaPadraoDTO<Void>> handleGenericException(Exception ex) {
+        log.error("Erro inesperado", ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(RespostaPadraoDTO.erro(
-                        "Ocorreu um erro interno no servidor: " + ex.getMessage(),
-                        HttpStatus.INTERNAL_SERVER_ERROR.value()
-                ));
+                        "Ocorreu um erro interno no servidor.",
+                        HttpStatus.INTERNAL_SERVER_ERROR.value()));
     }
 }

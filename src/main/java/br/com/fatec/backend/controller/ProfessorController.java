@@ -3,13 +3,17 @@ package br.com.fatec.backend.controller;
 import br.com.fatec.backend.dto.common.RespostaPadraoDTO;
 import br.com.fatec.backend.dto.professor.ProfessorRequisicaoDTO;
 import br.com.fatec.backend.dto.professor.ProfessorRespostaDTO;
+import br.com.fatec.backend.dto.professor.ProfessorStatusRequisicaoDTO;
 import br.com.fatec.backend.service.ProfessorService;
 import jakarta.validation.Valid;
-import br.com.fatec.backend.dto.professor.ProfessorAtualizacaoDTO;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -23,91 +27,46 @@ public class ProfessorController {
         this.service = service;
     }
 
-    @PreAuthorize("hasAnyRole('TI', 'RESPONSAVEL')")
     @GetMapping
-    public ResponseEntity<RespostaPadraoDTO<List<ProfessorRespostaDTO>>> listarTodos() {
-        List<ProfessorRespostaDTO> professores = service.listarTodos();
+    public ResponseEntity<Page<ProfessorRespostaDTO>> listar(
+            @RequestParam(required = false, defaultValue = "") String busca,
+            @ParameterObject Pageable pageable) {
 
-        return ResponseEntity.ok(
-                RespostaPadraoDTO.sucesso(
-                        "Lista de docentes obtida com sucesso.",
-                        professores
-                )
-        );
+        return ResponseEntity.ok(service.listar(busca, pageable));
     }
 
-    @PreAuthorize("hasAnyRole('TI', 'RESPONSAVEL')")
+    @GetMapping("/todos")
+    public ResponseEntity<List<ProfessorRespostaDTO>> listarTodos() {
+
+        return ResponseEntity.ok(service.listarTodos());
+    }
+
     @GetMapping("/{id}")
-    public ResponseEntity<RespostaPadraoDTO<ProfessorRespostaDTO>> buscarPorId(
-            @PathVariable Long id) {
-
-        ProfessorRespostaDTO dados = service.buscarPorId(id);
-
-        return ResponseEntity.ok(
-                RespostaPadraoDTO.sucesso(
-                        "Professor encontrado com sucesso.",
-                        dados
-                )
-        );
+    public ResponseEntity<RespostaPadraoDTO<ProfessorRespostaDTO>> buscarPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(RespostaPadraoDTO.sucesso(
+                "Professor encontrado com sucesso.", service.buscarPorId(id)));
     }
 
-    @PreAuthorize("hasAnyRole('TI', 'RESPONSAVEL')")
     @PostMapping
     public ResponseEntity<RespostaPadraoDTO<ProfessorRespostaDTO>> criar(
             @Valid @RequestBody ProfessorRequisicaoDTO requisicao) {
-
-        ProfessorRespostaDTO novoProfessor = service.criar(requisicao);
-
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(
-                        RespostaPadraoDTO.criado(
-                                "Professor cadastrado com sucesso.",
-                                novoProfessor
-                        )
-                );
+        return ResponseEntity.status(HttpStatus.CREATED).body(RespostaPadraoDTO.criado(
+                "Professor cadastrado com sucesso.", service.criar(requisicao)));
     }
 
-    @PreAuthorize("hasAnyRole('TI', 'RESPONSAVEL')")
     @PutMapping("/{id}")
     public ResponseEntity<RespostaPadraoDTO<ProfessorRespostaDTO>> atualizar(
             @PathVariable Long id,
-            @Valid @RequestBody ProfessorAtualizacaoDTO requisicao) {
-
-        ProfessorRespostaDTO professorAtualizado = service.atualizar(id, requisicao);
-
-        return ResponseEntity.ok(
-                RespostaPadraoDTO.sucesso(
-                        "O professor foi alterado com sucesso.",
-                        professorAtualizado
-                )
-        );
+            @Valid @RequestBody ProfessorRequisicaoDTO requisicao) {
+        return ResponseEntity.ok(RespostaPadraoDTO.sucesso(
+                "Professor alterado com sucesso.", service.atualizar(id, requisicao)));
     }
 
-    @PreAuthorize("hasAnyRole('TI', 'RESPONSAVEL')")
-    @PatchMapping("/{id}/ativar")
-    public ResponseEntity<RespostaPadraoDTO<Void>> ativar(
-            @PathVariable Long id) {
-
-        service.ativar(id);
-
-        return ResponseEntity.ok(
-                RespostaPadraoDTO.sucesso(
-                        "O professor foi ativado com sucesso."
-                )
-        );
-    }
-
-    @PreAuthorize("hasAnyRole('TI', 'RESPONSAVEL')")
-    @PatchMapping("/{id}/desativar")
-    public ResponseEntity<RespostaPadraoDTO<Void>> desativar(
-            @PathVariable Long id) {
-
-        service.desativar(id);
-
-        return ResponseEntity.ok(
-                RespostaPadraoDTO.sucesso(
-                        "O professor foi desativado com sucesso."
-                )
-        );
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<RespostaPadraoDTO<Void>> alterarStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody ProfessorStatusRequisicaoDTO requisicao) {
+        service.alterarStatus(id, requisicao.status());
+        return ResponseEntity.ok(RespostaPadraoDTO.sucesso("Status do professor alterado com sucesso."));
     }
 }

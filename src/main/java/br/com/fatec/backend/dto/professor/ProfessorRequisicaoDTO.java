@@ -1,9 +1,9 @@
 package br.com.fatec.backend.dto.professor;
 
 import br.com.fatec.backend.entity.RegimeContrato;
-import br.com.fatec.backend.entity.StatusProfessor;
+import br.com.fatec.backend.entity.RegimeJuridico;
 import br.com.fatec.backend.entity.Titulacao;
-// import br.com.fatec.backend.validation.CpfValido;
+import br.com.fatec.backend.validation.CpfValido;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -13,24 +13,23 @@ public record ProfessorRequisicaoDTO(
         @Size(max = 150, message = "O nome deve ter no máximo 150 caracteres")
         String nome,
 
-        @Size(max = 30, message = "O código deve ter no máximo 30 caracteres")
+        @Size(max = 10, message = "O código deve ter no máximo 10 caracteres")
         String codigo,
 
         @NotBlank(message = "O CPF é obrigatório")
-        // @CpfValido
+        @CpfValido
         String cpf,
 
         @NotBlank(message = "A matrícula é obrigatória")
-        @Size(max = 30, message = "A matrícula deve ter no máximo 30 caracteres")
+        @Size(max = 10, message = "A matrícula deve ter no máximo 10 caracteres")
         String matricula,
 
         @NotNull(message = "O regime de contrato é obrigatório")
         RegimeContrato regimeContrato,
 
-        @Size(max = 20, message = "O regime jurídico deve ter no máximo 20 caracteres")
-        String regimeJuridico,
+        @NotNull(message = "O regime jurídico é obrigatório")
+        RegimeJuridico regimeJuridico,
 
-        StatusProfessor status,
-
+        @NotNull(message = "A titulação é obrigatória")
         Titulacao titulacao
 ) {}

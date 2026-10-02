@@ -1,12 +1,12 @@
 package br.com.fatec.backend.repository;
+
 import br.com.fatec.backend.entity.Professor;
 import org.springframework.data.jpa.repository.JpaRepository;
-public interface ProfessorRepository extends JpaRepository<Professor, Long> {
-    boolean existsByCpf(String cpf);
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-    boolean existsByMatricula(String matricula);
+import java.util.Optional;
 
-    boolean existsByCpfAndIdNot(String cpf, Long id);
-
-    boolean existsByMatriculaAndIdNot(String matricula, Long id);
+public interface ProfessorRepository extends JpaRepository<Professor, Long>, JpaSpecificationExecutor<Professor> {
+    Optional<Professor> findByCpf(String cpf);
+    Optional<Professor> findByMatricula(String matricula);
 }

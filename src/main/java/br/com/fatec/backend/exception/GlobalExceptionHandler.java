@@ -37,6 +37,8 @@ public class GlobalExceptionHandler {
             UsernameNotFoundException.class,
             InternalAuthenticationServiceException.class
     })
+
+
     public ResponseEntity<RespostaPadraoDTO<Void>> handleAuthenticationException() {
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
@@ -82,14 +84,6 @@ public class GlobalExceptionHandler {
                 ));
     }
 
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<RespostaPadraoDTO<Void>> handleCorpoInvalido() {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(RespostaPadraoDTO.erro(
-                        "Corpo da requisição inválido ou com valor não reconhecido.",
-                        HttpStatus.BAD_REQUEST.value()));
-    }
-
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<RespostaPadraoDTO<Void>> handleAcessoNegado() {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -126,6 +120,14 @@ public class GlobalExceptionHandler {
                 ));
     }
 
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<RespostaPadraoDTO<Void>> handleCorpoInvalido() {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(RespostaPadraoDTO.erro(
+                        "Corpo da requisição inválido ou com valor não reconhecido.",
+                        HttpStatus.BAD_REQUEST.value()));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<RespostaPadraoDTO<Void>> handleGenericException(Exception ex) {
         log.error("Erro inesperado", ex);
@@ -134,4 +136,6 @@ public class GlobalExceptionHandler {
                         "Ocorreu um erro interno no servidor.",
                         HttpStatus.INTERNAL_SERVER_ERROR.value()));
     }
+
+
 }

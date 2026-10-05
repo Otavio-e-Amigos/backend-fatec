@@ -9,7 +9,5 @@ CREATE TABLE usuario (
     updated_at  TIMESTAMP    NOT NULL DEFAULT now(),
 
     CONSTRAINT uk_usuario_login UNIQUE (login),
-
-    -- Permite apenas os perfis TI e RESPONSAVEL.
     CONSTRAINT ck_usuario_perfil CHECK (perfil IN ('TI', 'RESPONSAVEL'))
 );

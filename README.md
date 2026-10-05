@@ -419,12 +419,17 @@ backend-fatec/
 │   │   │       ├── exception/
 │   │   │       ├── repository/
 │   │   │       ├── service/
+│   │   │       ├── specification/
+│   │   │       ├── validation/
 │   │   │       └── BackendApplication.java
 │   │   │
 │   │   └── resources/
+│   │       ├── db/
+│   │           └── migration/
 │   │       ├── static/
 │   │       ├── templates/
 │   │       │   └── grade-modelo.docx
+│   │       │   └── folha-de-ponto-modelo.docx
 │   │       └── application.properties
 │   │
 │   └── test/

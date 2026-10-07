@@ -49,8 +49,6 @@ docs/
 * *Regra 3 (Restrição de Semestre e Ano):* Semestre restrito aos valores `1` ou `2`; Ano validado no intervalo de `2000` a `2050`.
 * *Regra 4 (Ordenação Cronológica):* A listagem geral retorna os períodos ordenados do mais recente para o mais antigo (`ano DESC, semestre DESC`).
 
-
-
 #### 3. Impactos em Segurança e Perfis de Acesso
 
 * **Permissões:**
@@ -59,8 +57,6 @@ docs/
 
 * **Regras de Bloqueio:**
 * Requisições sem Token JWT ou provenientes de usuários inativos são rejeitadas pela camada de segurança (`401 Unauthorized` / `403 Forbidden`).
-
-
 
 #### 4. Endpoints e Contratos da API
 
@@ -76,9 +72,47 @@ docs/
 * Adição de `CONSTRAINT uk_periodo_letivo_ano_semestre UNIQUE (ano, semestre)`.
 * Adição de `CHECK constraints`: `ck_periodo_letivo_semestre` (`semestre IN (1, 2)`), `ck_periodo_letivo_ano` (`ano BETWEEN 2000 AND 2050`) e `ck_periodo_letivo_datas` (`data_inicio < data_fim`).
 
-
-
 ---
+
+### [Sprint 2] Manter Cursos
+
+#### 1. Visão Geral e Mapeamento
+
+- **Data da Conclusão:** 07/10/2026
+- **Mapeamento de Escopo:** Cadastro, atualização e consulta de Cursos da FATEC (ex.: Análise e Desenvolvimento de Sistemas), associando-os aos seus respectivos turnos e siglas operacionais.
+
+#### 2. Alterações e Decisões de Negócio
+
+- **Decisões Tomadas:**
+    - **Unicidade Relativizada por Turno:** O mesmo nome de curso (ex: "ADS") ou mesma sigla podem ser cadastrados mais de uma vez na mesma unidade, desde que em **turnos diferentes** (ex: ADS no turno da MANHÃ e ADS no turno da NOITE).
+    - **Formato Estrito da Sigla:** A sigla do curso deve possuir até 3 caracteres e conter **exclusivamente letras** (sem números ou caracteres especiais).
+    - **Listagem Direta Sem Paginação:** A rota `GET /api/cursos` retorna a lista completa de cursos ordenados alfabeticamente por nome, eliminando a paginação por se tratar de um volume reduzido de dados cadastrais.
+    - **Preservação de Histórico:** Sem suporte a exclusão física (`DELETE`) para evitar inconsistências em Grades Horárias associadas.
+
+- **Regras de Negócio e Validações:**
+    - *Regra 1 (Unicidade por Turno):* Impede o cadastro ou alteração de um curso que possua o mesmo nome ou a mesma sigla em um turno já ocupado (retorna HTTP 409 Conflict via `ConflitoException`).
+    - *Regra 2 (Validação da Sigla):* Validação no DTO com `@Pattern(regexp = "^[a-zA-Z]+$")` e trava no banco via regex para garantir apenas letras.
+
+#### 3. Impactos em Segurança e Perfis de Acesso
+
+- **Permissões:**
+    - As rotas `/api/cursos/**` exigem autenticação e permissão dos perfis `TI` ou `RESPONSAVEL` (`hasAnyRole("TI", "RESPONSAVEL")`).
+
+#### 4. Endpoints e Contratos da API
+
+- `GET /api/cursos` — Lista todos os cursos ordenados por nome (`200 OK`). Exige `TI` ou `RESPONSAVEL`.
+- `GET /api/cursos/{id}` — Detalhes do curso por ID (`200 OK` / `404 Not Found`). Exige `TI` ou `RESPONSAVEL`.
+- `POST /api/cursos` — Cadastra um novo curso (`201 Created`). Exige `TI` ou `RESPONSAVEL`.
+- `PUT /api/cursos/{id}` — Atualiza os dados do curso (`200 OK` / `409 Conflict`). Exige `TI` ou `RESPONSAVEL`.
+
+#### 5. Banco de Dados e Persistência
+
+- **Migrations Flyway:** Script criado em `V6__criacao_curso.sql`.
+- **Alterações de Schema:**
+    - Tabela `curso` criada com colunas `id` (BIGINT), `nome` (VARCHAR 150), `turno` (VARCHAR 5), `unidade` (VARCHAR 50) e `sigla` (VARCHAR 3).
+    - Adição de `CONSTRAINT ck_curso_turno CHECK (turno IN ('MANHA', 'TARDE', 'NOITE'))`.
+    - Adição de `CONSTRAINT ck_curso_sigla_letras CHECK (sigla ~ '^[A-Za-z]+$')`.
+    - Índices únicos compostos: `uk_curso_unidade_nome_turno_lower` sobre `(unidade, lower(nome), turno)` e `uk_curso_unidade_sigla_turno_upper` sobre `(unidade, upper(sigla), turno)`.
 
 ## Registro de Sprints Anteriores
 

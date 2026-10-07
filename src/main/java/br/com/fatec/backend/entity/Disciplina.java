@@ -1,6 +1,5 @@
 package br.com.fatec.backend.entity;
 
-
 import jakarta.persistence.*;
 
 @Entity
@@ -26,18 +25,16 @@ public class Disciplina {
         this.codigo = codigo;
         this.sigla = sigla;
         this.nome = nome;
-
     }
 
-    public void atualizarDados(String codigo, String sigla, String nome){
+    public void atualizarDados(String codigo, String sigla, String nome) {
         this.codigo = codigo;
         this.sigla = sigla;
         this.nome = nome;
     }
 
-    public Long getId() {return id;}
-    public String getCodigo() {return codigo;}
-    public String getSigla() {return sigla;}
-    public String getNome() {return nome;}
-
+    public Long getId() { return id; }
+    public String getCodigo() { return codigo; }
+    public String getSigla() { return sigla; }
+    public String getNome() { return nome; }
 }

@@ -1,12 +1,18 @@
 package br.com.fatec.backend.repository;
 
 import br.com.fatec.backend.entity.Disciplina;
-import br.com.fatec.backend.specification.DisciplinaSpecs;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
+import java.util.List;
 
-public interface DisciplinaRepository extends JpaRepository<Disciplina, Long>, JpaSpecificationExecutor<Disciplina>{
-    Optional<Disciplina> findByNome(String nome);
+@Repository
+public interface DisciplinaRepository extends JpaRepository<Disciplina, Long>, JpaSpecificationExecutor<Disciplina> {
+
+    List<Disciplina> findAllByOrderByNomeAsc();
+
+    boolean existsByCodigoIgnoreCase(String codigo);
+
+    boolean existsByCodigoIgnoreCaseAndIdNot(String codigo, Long id);
 }

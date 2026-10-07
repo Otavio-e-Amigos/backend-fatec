@@ -6,24 +6,20 @@ import org.springframework.data.jpa.domain.Specification;
 
 public class DisciplinaSpecs {
 
-    public static Specification<Disciplina> buscarDisciplinaPorNome(String busca) {
+    public static Specification<Disciplina> buscarPorTermo(String busca) {
         return (root, query, builder) -> {
-
-            // Se a busca for nula ou vazia, retorna "WHERE 1=1" (traz todos sem custo)
-
-            if(busca == null || busca.isBlank() ){
+            if (busca == null || busca.isBlank()) {
                 return builder.conjunction();
             }
 
-            // Evita chamar LOWER() a cada linha no banco; fazemos isso no Java uma vez
-            String termoBuscado = "%" + busca.toLowerCase() + "%";
+            String termoBuscado = "%" + busca.toLowerCase().trim() + "%";
 
-            // Monta: LOWER(nome) LIKE '%termo%'
+            // Permite pesquisar por Nome, Código OU Sigla
             Predicate porNome = builder.like(builder.lower(root.get("nome")), termoBuscado);
+            Predicate porCodigo = builder.like(builder.lower(root.get("codigo")), termoBuscado);
+            Predicate porSigla = builder.like(builder.lower(root.get("sigla")), termoBuscado);
 
-            return builder.in(porNome);
+            return builder.or(porNome, porCodigo, porSigla);
         };
-
-
     }
 }

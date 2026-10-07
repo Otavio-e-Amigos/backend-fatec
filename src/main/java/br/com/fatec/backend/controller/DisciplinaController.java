@@ -8,12 +8,12 @@ import jakarta.validation.Valid;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
 
 @RestController
 @RequestMapping("/api/disciplinas")
@@ -21,17 +21,16 @@ public class DisciplinaController {
 
     private final DisciplinaService service;
 
-    public DisciplinaController(DisciplinaService service)
-    { this.service = service;}
+    public DisciplinaController(DisciplinaService service) {
+        this.service = service;
+    }
 
     @GetMapping
     public ResponseEntity<Page<DisciplinaRespostaDTO>> listar(
             @RequestParam(required = false, defaultValue = "") String busca,
-            @ParameterObject Pageable pageable) {
-
+            @ParameterObject @PageableDefault(sort = "nome") Pageable pageable) {
         return ResponseEntity.ok(service.listar(busca, pageable));
     }
-
 
     @GetMapping("/todas")
     public ResponseEntity<List<DisciplinaRespostaDTO>> listarTodos() {
@@ -59,5 +58,9 @@ public class DisciplinaController {
                 "Disciplina alterada com sucesso.", service.atualizar(id, requisicao)));
     }
 
-
+    @DeleteMapping("/{id}")
+    public ResponseEntity<RespostaPadraoDTO<Void>> excluir(@PathVariable Long id) {
+        service.excluir(id);
+        return ResponseEntity.ok(RespostaPadraoDTO.sucesso("Disciplina excluída com sucesso.", null));
+    }
 }

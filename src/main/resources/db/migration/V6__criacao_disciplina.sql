@@ -5,7 +5,6 @@ CREATE TABLE disciplina(
     codigo  VARCHAR(30) NOT NULL,
     sigla   VARCHAR(8) NOT NULL,
     nome    VARCHAR(150) NOT NULL,
-
     CONSTRAINT uk_disciplina_codigo UNIQUE (codigo)
 );
 

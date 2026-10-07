@@ -82,6 +82,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/usuarios/**").hasRole("TI")
                         // 5. Gerenciamento de Professor (AMBOS para os perfilis TI)
                         .requestMatchers("/api/professores/**").hasAnyRole("TI", "RESPONSAVEL")
+                        // 6. Gerenciamento de Cursos (AMBOS para os perfilis TI)
+                        .requestMatchers("/api/cursos/**").hasAnyRole("TI", "RESPONSAVEL")
                         // -----------------------------------------------------------------------
                         // [FUTURAS ROTAS OPERACIONAIS - PERMISSAO: TI E RESPONSAVEL]
                         // Exemplo de mapeamento para as próximas Issues do sistema:

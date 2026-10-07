@@ -27,6 +27,13 @@
     - `CONSTRAINT uk_professor_cpf UNIQUE (cpf)` e `CONSTRAINT uk_professor_matricula UNIQUE (matricula)`.
     - `CONSTRAINT ck_professor_cpf CHECK (cpf ~ '^[0-9]{11}$')`.
     - Check constraints para os enums restritos: `regime_contrato`, `regime_juridico`, `status` e `titulacao`.
+### 3.3 Tabela Curso **`[Sprint X - Manter Cursos]`**
+- **Tabela `curso`:** `id`, `nome` (até 150), `turno`, `unidade` (padrão `FATEC Zona Leste`) e `sigla` (até 3).
+- **Constraints:**
+  - `ck_curso_turno CHECK (turno IN ('MANHA', 'TARDE', 'NOITE'))`.
+  - `ck_curso_nome` e `ck_curso_sigla`: impedem nome com espaços nas pontas e valores vazios.
+- **Índice:** `uk_curso_unidade_nome_lower`, índice único em `(unidade, lower(nome))`, garante nome único por unidade ignorando maiúsculas/minúsculas.
+- **Relacionamento:** a FK de `DISCIPLINA_DA_GRADE` para `CURSO` (`ON DELETE RESTRICT`) será criada na issue da Grade.
 
 ## 4. Sistema de Grade
 
@@ -99,6 +106,14 @@ Todas as requisições da API são padronizadas pela classe `RespostaPadraoDTO` 
 * `PUT /api/professores/{id}` — Atualização completa dos dados cadastrais.
 * `PATCH /api/professores/{id}/status` — Alteração isolada de status (ATIVO, INATIVO, AFASTADO).
 
+**Cursos**
+
+* `GET /api/cursos` — Listagem paginada (Pageable).
+* `GET /api/cursos/todos` — Listagem completa, ordenada por nome, para seletores.
+* `GET /api/cursos/{id}` — Consulta individual do curso.
+* `POST /api/cursos` — Cadastro de curso (unidade definida automaticamente).
+* `PUT /api/cursos/{id}` — Atualização completa dos dados.
+* Não existe `DELETE`.
 
 ### 7.3 Documentação OpenAPI (Swagger) **`[Sprint 1 - Manter Usuário]`**
 

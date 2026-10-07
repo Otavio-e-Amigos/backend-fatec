@@ -6,11 +6,9 @@ import br.com.fatec.backend.entity.Curso;
 import br.com.fatec.backend.exception.ConflitoException;
 import br.com.fatec.backend.exception.RecursoNaoEncontradoException;
 import br.com.fatec.backend.repository.CursoRepository;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 
 @Service
@@ -24,7 +22,7 @@ public class CursoService {
 
     @Transactional(readOnly = true)
     public List<CursoRespostaDTO> listarTodos() {
-        return repository.findAll(Sort.by("nome")).stream()
+        return repository.findAllByOrderByNomeAsc().stream()
                 .map(CursoRespostaDTO::daEntidadeCompleta)
                 .toList();
     }
@@ -39,8 +37,7 @@ public class CursoService {
         String nome = requisicao.nome().trim();
         String sigla = requisicao.sigla().trim();
 
-        validarNomeUnico(nome, null);
-        validarSiglaUnica(sigla, null);
+        validarUnicidadePorTurno(nome, sigla, requisicao.turno(), null);
 
         Curso curso = new Curso(nome, requisicao.turno(), sigla);
 
@@ -54,18 +51,11 @@ public class CursoService {
         String nome = requisicao.nome().trim();
         String sigla = requisicao.sigla().trim();
 
-        validarNomeUnico(nome, id);
-        validarSiglaUnica(sigla, id);
+        validarUnicidadePorTurno(nome, sigla, requisicao.turno(), id);
 
         curso.atualizarDados(nome, requisicao.turno(), sigla);
 
         return CursoRespostaDTO.daEntidadeCompleta(curso);
-    }
-
-    @Transactional(readOnly = true)
-    public Page<CursoRespostaDTO> listar(Pageable pageable) {
-        return repository.findAll(pageable)
-                .map(CursoRespostaDTO::daEntidadeCompleta);
     }
 
     private Curso buscarEntidadePorId(Long id) {
@@ -74,23 +64,21 @@ public class CursoService {
                         "Curso não encontrado com ID: " + id));
     }
 
-    private void validarNomeUnico(String nome, Long idAtual) {
+    private void validarUnicidadePorTurno(String nome, String sigla, br.com.fatec.backend.entity.Turno turno, Long idAtual) {
         boolean nomeEmUso = (idAtual == null)
-                ? repository.existsByUnidadeAndNomeIgnoreCase(Curso.UNIDADE_PADRAO, nome)
-                : repository.existsByUnidadeAndNomeIgnoreCaseAndIdNot(Curso.UNIDADE_PADRAO, nome, idAtual);
+                ? repository.existsByUnidadeAndNomeIgnoreCaseAndTurno(Curso.UNIDADE_PADRAO, nome, turno)
+                : repository.existsByUnidadeAndNomeIgnoreCaseAndTurnoAndIdNot(Curso.UNIDADE_PADRAO, nome, turno, idAtual);
 
         if (nomeEmUso) {
-            throw new ConflitoException("Já existe um curso com este nome nesta unidade.");
+            throw new ConflitoException("Já existe um curso com este nome no turno da " + turno + ".");
         }
-    }
 
-    private void validarSiglaUnica(String sigla, Long idAtual) {
         boolean siglaEmUso = (idAtual == null)
-                ? repository.existsByUnidadeAndSiglaIgnoreCase(Curso.UNIDADE_PADRAO, sigla)
-                : repository.existsByUnidadeAndSiglaIgnoreCaseAndIdNot(Curso.UNIDADE_PADRAO, sigla, idAtual);
+                ? repository.existsByUnidadeAndSiglaIgnoreCaseAndTurno(Curso.UNIDADE_PADRAO, sigla, turno)
+                : repository.existsByUnidadeAndSiglaIgnoreCaseAndTurnoAndIdNot(Curso.UNIDADE_PADRAO, sigla, turno, idAtual);
 
         if (siglaEmUso) {
-            throw new ConflitoException("Já existe um curso com esta sigla nesta unidade.");
+            throw new ConflitoException("Já existe um curso com esta sigla no turno da " + turno + ".");
         }
     }
 }

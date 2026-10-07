@@ -1,15 +1,22 @@
 package br.com.fatec.backend.repository;
 
 import br.com.fatec.backend.entity.Curso;
+import br.com.fatec.backend.entity.Turno;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
+@Repository
 public interface CursoRepository extends JpaRepository<Curso, Long> {
 
-    boolean existsByUnidadeAndSiglaIgnoreCase(String unidade, String sigla);
+    List<Curso> findAllByOrderByNomeAsc();
 
-    boolean existsByUnidadeAndSiglaIgnoreCaseAndIdNot(String unidade, String sigla, Long id);
+    boolean existsByUnidadeAndNomeIgnoreCaseAndTurno(String unidade, String nome, Turno turno);
 
-    boolean existsByUnidadeAndNomeIgnoreCase(String unidade, String nome);
+    boolean existsByUnidadeAndNomeIgnoreCaseAndTurnoAndIdNot(String unidade, String nome, Turno turno, Long id);
 
-    boolean existsByUnidadeAndNomeIgnoreCaseAndIdNot(String unidade, String nome, Long id);
+    boolean existsByUnidadeAndSiglaIgnoreCaseAndTurno(String unidade, String sigla, Turno turno);
+
+    boolean existsByUnidadeAndSiglaIgnoreCaseAndTurnoAndIdNot(String unidade, String sigla, Turno turno, Long id);
 }

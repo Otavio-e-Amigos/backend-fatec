@@ -59,7 +59,7 @@ public class Usuario {
     }
 
     public void atualizarSenha(String novaSenhaHash) {
-        this.senhaHash = novaSenhaHash; // CORRIGIDO: Atribui a nova senha recebida
+        this.senhaHash = novaSenhaHash;
     }
 
     public void ativar() {

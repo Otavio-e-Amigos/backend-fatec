@@ -7,14 +7,9 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "grade")
-@Getter
-@Setter
-@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -39,6 +34,7 @@ public class Grade {
     @Column(precision = 6, scale = 2)
     private BigDecimal mensal;
 
+    @Builder.Default
     @Column(precision = 6, scale = 2)
     private BigDecimal total;
 
@@ -50,16 +46,19 @@ public class Grade {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    // Mapeamento bidirecional.
-    // Ausência deliberada de CascadeType.REMOVE e orphanRemoval para garantir a restrição ON DELETE RESTRICT
-    // @Builder.Default
-    // @OneToMany(mappedBy = "grade")
-    // private List<DisciplinaDaGrade> disciplinas = new ArrayList<>();
-
-
     protected Grade() {}
 
-    public Grade(BigDecimal semanal, BigDecimal mensal, BigDecimal total){
+    public Grade(Professor professor, PeriodoLetivo periodoLetivo, BigDecimal semanal, BigDecimal mensal, BigDecimal total) {
+        this.professor = professor;
+        this.periodoLetivo = periodoLetivo;
+        this.semanal = semanal;
+        this.mensal = mensal;
+        this.total = total;
+    }
+
+    public void atualizarDados(Professor professor, PeriodoLetivo periodoLetivo, BigDecimal semanal, BigDecimal mensal, BigDecimal total) {
+        this.professor = professor;
+        this.periodoLetivo = periodoLetivo;
         this.semanal = semanal;
         this.mensal = mensal;
         this.total = total;
@@ -96,6 +95,4 @@ public class Grade {
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
-
-
 }

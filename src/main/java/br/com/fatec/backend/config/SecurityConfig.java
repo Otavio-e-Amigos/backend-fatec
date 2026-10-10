@@ -86,16 +86,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/cursos/**").hasAnyRole("TI", "RESPONSAVEL")
                         // 7. Gerenciamento de Períodos Letivos (AMBOS para os perfilis TI)
                         .requestMatchers("/api/periodos-letivos/**").hasAnyRole("TI", "RESPONSAVEL")
+                        // 7. Gerenciamento de Grade (AMBOS para os perfilis TI)
+                        .requestMatchers("/api/grade/**").hasAnyRole("TI", "RESPONSAVEL")
 
-                        // -----------------------------------------------------------------------
-                        // [FUTURAS ROTAS OPERACIONAIS - PERMISSAO: TI E RESPONSAVEL]
-                        // Exemplo de mapeamento para as próximas Issues do sistema:
-                        //
-                        // .requestMatchers("/api/grades/**").hasAnyRole("TI", "RESPONSAVEL")
-                        // .requestMatchers("/api/folhas-frequencia/**").hasAnyRole("TI", "RESPONSAVEL")
-                        // -----------------------------------------------------------------------
-
-                        // 5. Qualquer outro endpoint exige autenticação por padrão
+                        // Qualquer outro endpoint exige autenticação por padrão
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);

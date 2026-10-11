@@ -1,5 +1,6 @@
 package br.com.fatec.backend.entity;
 
+import br.com.fatec.backend.enums.StatusDisciplinaGrade;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;

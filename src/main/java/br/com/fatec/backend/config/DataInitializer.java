@@ -1,6 +1,6 @@
 package br.com.fatec.backend.config;
 
-import br.com.fatec.backend.entity.Perfil;
+import br.com.fatec.backend.enums.Perfil;
 import br.com.fatec.backend.entity.Usuario;
 import br.com.fatec.backend.repository.UsuarioRepository;
 import org.springframework.boot.CommandLineRunner;

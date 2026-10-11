@@ -1,5 +1,6 @@
 package br.com.fatec.backend.entity;
 
+import br.com.fatec.backend.enums.Perfil;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;

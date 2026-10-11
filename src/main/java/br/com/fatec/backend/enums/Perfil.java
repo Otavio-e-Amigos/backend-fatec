@@ -1,4 +1,4 @@
-package br.com.fatec.backend.entity;
+package br.com.fatec.backend.enums;
 
 /** Perfis de acesso do sistema. */
 public enum Perfil {

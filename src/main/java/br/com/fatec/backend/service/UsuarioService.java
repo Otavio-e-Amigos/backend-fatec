@@ -3,7 +3,7 @@ package br.com.fatec.backend.service;
 import br.com.fatec.backend.dto.usuario.UsuarioCreateDTO;
 import br.com.fatec.backend.dto.usuario.UsuarioResponseDTO;
 import br.com.fatec.backend.dto.usuario.UsuarioUpdateDTO;
-import br.com.fatec.backend.entity.Perfil;
+import br.com.fatec.backend.enums.Perfil;
 import br.com.fatec.backend.entity.Usuario;
 import br.com.fatec.backend.exception.RegraNegocioException;
 import br.com.fatec.backend.repository.UsuarioRepository;

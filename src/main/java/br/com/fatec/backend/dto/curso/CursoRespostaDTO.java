@@ -1,7 +1,7 @@
 package br.com.fatec.backend.dto.curso;
 
 import br.com.fatec.backend.entity.Curso;
-import br.com.fatec.backend.entity.Turno;
+import br.com.fatec.backend.enums.Turno;
 
 public record CursoRespostaDTO(
         Long id,

@@ -1,10 +1,10 @@
 package br.com.fatec.backend.dto.professor;
 
 import br.com.fatec.backend.entity.Professor;
-import br.com.fatec.backend.entity.RegimeContrato;
-import br.com.fatec.backend.entity.StatusProfessor;
-import br.com.fatec.backend.entity.Titulacao;
-import br.com.fatec.backend.entity.RegimeJuridico;
+import br.com.fatec.backend.enums.RegimeContrato;
+import br.com.fatec.backend.enums.StatusProfessor;
+import br.com.fatec.backend.enums.Titulacao;
+import br.com.fatec.backend.enums.RegimeJuridico;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 

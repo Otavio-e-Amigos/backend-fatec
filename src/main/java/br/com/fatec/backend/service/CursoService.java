@@ -3,6 +3,7 @@ package br.com.fatec.backend.service;
 import br.com.fatec.backend.dto.curso.CursoRequisicaoDTO;
 import br.com.fatec.backend.dto.curso.CursoRespostaDTO;
 import br.com.fatec.backend.entity.Curso;
+import br.com.fatec.backend.enums.Turno;
 import br.com.fatec.backend.exception.ConflitoException;
 import br.com.fatec.backend.exception.RecursoNaoEncontradoException;
 import br.com.fatec.backend.repository.CursoRepository;
@@ -64,7 +65,7 @@ public class CursoService {
                         "Curso não encontrado com ID: " + id));
     }
 
-    private void validarUnicidadePorTurno(String nome, String sigla, br.com.fatec.backend.entity.Turno turno, Long idAtual) {
+    private void validarUnicidadePorTurno(String nome, String sigla, Turno turno, Long idAtual) {
         boolean nomeEmUso = (idAtual == null)
                 ? repository.existsByUnidadeAndNomeIgnoreCaseAndTurno(Curso.UNIDADE_PADRAO, nome, turno)
                 : repository.existsByUnidadeAndNomeIgnoreCaseAndTurnoAndIdNot(Curso.UNIDADE_PADRAO, nome, turno, idAtual);

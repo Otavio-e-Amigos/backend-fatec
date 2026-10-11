@@ -139,7 +139,7 @@ Listagem das novas rotas ou alterações nos contratos existentes:
 
 ---
 
-### [Sprint 4] Cadastro e Gerenciamento de Aula da Grade
+### [Sprint 3] Cadastro e Gerenciamento de Aula da Grade
 
 1. #### Visão Geral e Mapeamento
 

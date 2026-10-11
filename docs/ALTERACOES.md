@@ -42,8 +42,6 @@ docs/
 * *Regra 1:* Detalhar validações inseridas no Backend/Services.
 * *Regra 2:* Restrições de mutação ou estados de entidades.
 
-
-
 #### 3. Impactos em Segurança e Perfis de Acesso
 
 * **Permissões:** Mapeamento de quem pode executar as novas rotas (`ROLE_TI`, `ROLE_RESPONSAVEL`).
@@ -97,6 +95,47 @@ Listagem das novas rotas ou alterações nos contratos existentes:
 - **Alterações de Schema:**
     - Criação da tabela `grade` com colunas `id` (BIGINT), `professor_id` (BIGINT, FK), `periodo_letivo_id` (BIGINT, FK), `semanal`, `mensal`, `total` (`NUMERIC(6,2)`, opcionais), `created_at` e `updated_at` (`TIMESTAMP`).
     - Adição das constraints de chave estrangeira `fk_grade_professor` e `fk_grade_periodo` com a regra `ON DELETE RESTRICT`.
+
+---
+
+### [Sprint 3] Cadastro e Gerenciamento de Disciplina da Grade
+
+1. #### Visão Geral e Mapeamento
+
+- **Data da Conclusão:** 11/10/2026
+- **Mapeamento de Escopo:** Implementação da entidade de associação `DisciplinaDaGrade`, conectando Grades, Disciplinas e Cursos para definir o planejamento acadêmico, turnos, semestres, quantidade de aulas e estados operacionais.
+
+#### 2. Alterações e Decisões de Negócio
+
+- **Decisões Tomadas:**
+  - **Exclusão Livre:** Remoção de travas históricas complexas na exclusão, permitindo que a associação seja removida livremente via serviço conforme a necessidade administrativa.
+  - **Padronização de Status via Enum:** Utilização do Enum `StatusDisciplinaGrade` contendo rigidamente os estados `MINISTRANDO` e `CANCELADA`, substituindo validações por texto livre.
+
+- **Regras de Negócio e Validações:**
+  - *Regra 1 (Quantidade de Aulas Obrigatória):* O campo `quantidade_aulas` é obrigatório e validado por banco de dados através de `CHECK (quantidade_aulas > 0)`.
+  - *Regra 2 (Unicidade de Vínculo):* Validação no serviço utilizando `existsByGradeIdAndDisciplinaIdAndCursoId` para evitar duplicidade da mesma disciplina para o mesmo curso na mesma grade (lançando HTTP 409 Conflict via `ConflitoException`).
+  - *Regra 3 (Integridade Referencial Estrita):* As chaves estrangeiras (`grade_id`, `disciplina_id`, `curso_id`) contam com restrição `ON DELETE RESTRICT`.
+  - *Regra 4 (Normalização de Texto):* Campos de texto opcionais como `periodo` passam por normalização de espaços e conversão para maiúsculo (`.trim().toUpperCase()`).
+
+#### 3. Impactos em Segurança e Perfis de Acesso
+
+- **Permissões:** As rotas de manipulação de disciplinas da grade exigem autenticação via Bearer Token e permissão exclusiva para os perfis `TI` ou `RESPONSAVEL` (`hasAnyRole("TI", "RESPONSAVEL")`).
+- **Regras de Bloqueio:** Tentativas de acesso sem token (`401`) ou credenciais inválidas/insuficientes (`403`) são tratadas pelos handlers globais.
+
+#### 4. Endpoints e Contratos da API
+
+- `POST /api/disciplinas-grade` — Associa uma disciplina a uma grade e curso (`201 Created`).
+- `GET /api/grades/{id}/disciplinas` — Retorna a lista de disciplinas vinculadas a uma Grade específica (`200 OK`).
+- `GET /api/disciplinas-grade/{id}` — Consulta os detalhes de uma associação específica por ID (`200 OK` / `404 Not Found`).
+- `PUT /api/disciplinas-grade/{id}` — Atualiza os dados da associação (`200 OK`).
+- `DELETE /api/disciplinas-grade/{id}` — Remove a vinculação da disciplina à grade (`200 OK`).
+
+#### 5. Banco de Dados e Persistência
+
+- **Migrations Flyway:** Script criado em `V9__criacao_disciplina_da_grade.sql`.
+- **Alterações de Schema:**
+  - Criação da tabela `disciplina_da_grade` com colunas `id`, `grade_id`, `disciplina_id`, `curso_id`, `semestre_curso`, `periodo`, `quantidade_aulas`, `op`, `status`, `created_at` e `updated_at`.
+  - Configuração de `ON DELETE RESTRICT` nas FKs e `CHECK` constraint em `quantidade_aulas`.
 
 ---
 

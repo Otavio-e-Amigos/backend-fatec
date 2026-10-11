@@ -3,7 +3,7 @@ package br.com.fatec.backend.service;
 import br.com.fatec.backend.dto.professor.ProfessorRequisicaoDTO;
 import br.com.fatec.backend.dto.professor.ProfessorRespostaDTO;
 import br.com.fatec.backend.entity.Professor;
-import br.com.fatec.backend.entity.StatusProfessor;
+import br.com.fatec.backend.enums.StatusProfessor;
 import br.com.fatec.backend.exception.ConflitoException;
 import br.com.fatec.backend.exception.RecursoNaoEncontradoException;
 import br.com.fatec.backend.repository.ProfessorRepository;

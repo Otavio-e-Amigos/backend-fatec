@@ -1,6 +1,6 @@
 package br.com.fatec.backend.dto.curso;
 
-import br.com.fatec.backend.entity.Turno;
+import br.com.fatec.backend.enums.Turno;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

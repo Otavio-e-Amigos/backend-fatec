@@ -1,6 +1,6 @@
 package br.com.fatec.backend.dto.disciplina_da_grade;
 
-import br.com.fatec.backend.entity.StatusDisciplinaGrade;
+import br.com.fatec.backend.enums.StatusDisciplinaGrade;
 import jakarta.validation.constraints.*;
 import io.swagger.v3.oas.annotations.media.Schema;
 

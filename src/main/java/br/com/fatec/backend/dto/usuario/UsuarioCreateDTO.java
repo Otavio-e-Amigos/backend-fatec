@@ -1,6 +1,6 @@
 package br.com.fatec.backend.dto.usuario;
 
-import br.com.fatec.backend.entity.Perfil;
+import br.com.fatec.backend.enums.Perfil;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 

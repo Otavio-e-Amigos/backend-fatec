@@ -1,5 +1,6 @@
 package br.com.fatec.backend.entity;
 
+import br.com.fatec.backend.enums.Turno;
 import jakarta.persistence.*;
 
 @Entity

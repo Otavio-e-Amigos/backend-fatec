@@ -4,7 +4,7 @@ import br.com.fatec.backend.dto.common.RespostaPadraoDTO;
 import br.com.fatec.backend.dto.usuario.UsuarioCreateDTO;
 import br.com.fatec.backend.dto.usuario.UsuarioResponseDTO;
 import br.com.fatec.backend.dto.usuario.UsuarioUpdateDTO;
-import br.com.fatec.backend.entity.Perfil;
+import br.com.fatec.backend.enums.Perfil;
 import br.com.fatec.backend.service.UsuarioService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;

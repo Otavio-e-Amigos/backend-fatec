@@ -139,6 +139,45 @@ Listagem das novas rotas ou alterações nos contratos existentes:
 
 ---
 
+### [Sprint 4] Cadastro e Gerenciamento de Aula da Grade
+
+1. #### Visão Geral e Mapeamento
+
+- **Data da Conclusão:** 11/10/2026
+- **Mapeamento de Escopo:** Implementação do módulo de alocação de horários e blocos de aula (`AULA_DA_GRADE`), permitindo o registro de dias da semana (ISO-8601) e intervalos temporais vinculados às disciplinas da grade, servindo como base essencial para o planejamento acadêmico e futura geração da Folha de Frequência.
+
+#### 2. Alterações e Decisões de Negócio
+
+- **Decisões Tomadas:**
+  - **Abordagem de Bloco Contínuo:** Períodos longos de aula (ex: 13:00 às 18:20) são gravados em um único registro contínuo por sessão, ficando a expansão programática para slots de 50 minutos sob responsabilidade da camada de serviço.
+  - **Validação de Conflito em Camada de Serviço:** Como a tabela de aulas aponta indiretamente para a Grade através de `DISCIPLINA_DA_GRADE`, a regra complexa de prevenção de sobreposição de horários na mesma grade é processada de forma centralizada no `AulaDaGradeService` utilizando comparação temporal matemática (`(StartA < EndB) && (StartB < EndA)`).
+
+- **Regras de Negócio e Validações:**
+  - *Regra 1 (Validação Temporal):* A `hora_fim` deve ser obrigatoriamente posterior à `hora_inicio`, garantida tanto via `CHECK` no banco de dados quanto por validação no serviço (lançando `RegraNegocioException` / `400 Bad Request`).
+  - *Regra 2 (Bloqueio de Sobreposição):* Tentativas de alocar horários conflitantes no mesmo dia para a mesma grade bloqueiam a operação imediatamente (lançando `ConflitoException` / `409 Conflict`).
+  - *Regra 3 (Domínio de Dias da Semana):* O campo `dia_semana` valida rigorosamente a faixa numérica de 1 a 7 conforme o padrão ISO-8601.
+  - *Regra 4 (Integridade Referencial Estrita):* A chave estrangeira `disciplina_grade_id` utiliza restrição `ON DELETE RESTRICT`.
+
+#### 3. Impactos em Segurança e Perfis de Acesso
+
+- **Permissões:** As rotas do módulo `/api/aulas-grade/**` e associadas exigem autenticação obrigatória via Bearer Token e permissão exclusiva para os perfis **`TI`** ou **`RESPONSAVEL`** (`hasAnyRole("TI", "RESPONSAVEL")`).
+- **Regras de Bloqueio:** Tentativas de acesso sem token (`401`) ou credenciais insuficientes (`403`) são tratadas pelos handlers globais.
+
+#### 4. Endpoints e Contratos da API
+
+- `POST /api/disciplinas-grade/{id}/aulas` — Registra os horários de aula em bloco contínuo para uma disciplina da grade (`201 Created` / `400 Bad Request` / `409 Conflict`).
+- `GET /api/disciplinas-grade/{id}/aulas` — Retorna todas as aulas vinculadas a uma disciplina da grade específica (`200 OK`).
+- `DELETE /api/aulas-grade/{id}` — Remove um horário de aula cadastrado (`200 OK` / `404 Not Found`).
+
+#### 5. Banco de Dados e Persistência
+
+- **Migrations Flyway:** Script criado em `V10__criacao_aula_da_grade.sql`.
+- **Alterações de Schema:**
+  - Criação da tabela `aula_da_grade` com colunas `id`, `disciplina_grade_id`, `dia_semana` (SMALLINT), `hora_inicio` (TIME) e `hora_fim` (TIME).
+  - Adição de índice na FK `disciplina_grade_id` e constraints `CHECK` para validação de horários e dias da semana.
+
+
+---
 ## Registro de Sprints Anteriores
 
 *(Histórico consolidado e promovido ao DOCUMENTACAO.md)*

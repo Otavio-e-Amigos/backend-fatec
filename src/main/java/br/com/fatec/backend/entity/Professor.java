@@ -1,5 +1,9 @@
 package br.com.fatec.backend.entity;
 
+import br.com.fatec.backend.enums.RegimeContrato;
+import br.com.fatec.backend.enums.RegimeJuridico;
+import br.com.fatec.backend.enums.StatusProfessor;
+import br.com.fatec.backend.enums.Titulacao;
 import jakarta.persistence.*;
 
 @Entity

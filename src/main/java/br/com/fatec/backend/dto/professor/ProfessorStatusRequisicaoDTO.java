@@ -1,6 +1,6 @@
 package br.com.fatec.backend.dto.professor;
 
-import br.com.fatec.backend.entity.StatusProfessor;
+import br.com.fatec.backend.enums.StatusProfessor;
 import jakarta.validation.constraints.NotNull;
 
 public record ProfessorStatusRequisicaoDTO(

@@ -1,7 +1,7 @@
 package br.com.fatec.backend.dto.disciplina_da_grade;
 
 import br.com.fatec.backend.entity.DisciplinaDaGrade;
-import br.com.fatec.backend.entity.StatusDisciplinaGrade;
+import br.com.fatec.backend.enums.StatusDisciplinaGrade;
 
 public record DisciplinaDaGradeRespostaDTO(
         Long id,

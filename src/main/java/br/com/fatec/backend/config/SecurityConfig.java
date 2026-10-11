@@ -88,6 +88,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/periodos-letivos/**").hasAnyRole("TI", "RESPONSAVEL")
                         // 7. Gerenciamento de Grade (AMBOS para os perfilis TI)
                         .requestMatchers("/api/grade/**").hasAnyRole("TI", "RESPONSAVEL")
+                        // 8. Gerenciamento de Grade (AMBOS para os perfilis TI)
+                        .requestMatchers("/api/disciplinas-grade/**").hasAnyRole("TI", "RESPONSAVEL")
 
                         // Qualquer outro endpoint exige autenticação por padrão
                         .anyRequest().authenticated()

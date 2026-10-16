@@ -58,4 +58,10 @@ public class GradeController {
         return ResponseEntity.ok(RespostaPadraoDTO.sucesso(
                 "Grade alterada com sucesso.", service.atualizar(id, requisicao)));
     }
+
+    @DeleteMapping("/grades/{id}")
+    public ResponseEntity<RespostaPadraoDTO<Void>> excluir(@PathVariable Long id) {
+        service.excluir(id);
+        return ResponseEntity.ok(RespostaPadraoDTO.sucesso("Grade removida com sucesso.", null));
+    }
 }

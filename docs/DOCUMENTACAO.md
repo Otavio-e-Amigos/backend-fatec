@@ -145,11 +145,12 @@ Todas as requisições da API são padronizadas pela classe `RespostaPadraoDTO` 
 * `PUT /api/professores/{id}` — Atualização completa dos dados cadastrais.
 * `PATCH /api/professores/{id}/status` — Alteração isolada de status (ATIVO, INATIVO, AFASTADO).
 
-**Períodos Letivos `[Sprint 2 - Cadastrar Período Letivo]`:**
+**Períodos Letivos `[Sprint 2 - Gerenciamento de Período Letivo]`:**
 
 * `POST /api/periodos-letivos` — Cadastra um novo período letivo (`201 Created`).
 * `GET /api/periodos-letivos` — Lista os períodos ordenados do mais recente ao mais antigo (`200 OK`).
 * `GET /api/periodos-letivos/{id}` — Detalha um período específico por ID (`200 OK` / `404 Not Found`).
+* `PUT /api/periodos-letivos/{id}` — Atualiza os dados de um período letivo (`200 OK` / `400 Bad Request` / `404 Not Found` / `409 Conflict`).
 
 **Cursos `[Sprint 2 - Manter Cursos]`:**
 
@@ -166,6 +167,31 @@ Todas as requisições da API são padronizadas pela classe `RespostaPadraoDTO` 
 * `POST /api/disciplinas` — Cadastra nova disciplina (`201 Created`).
 * `PUT /api/disciplinas/{id}` — Atualiza os dados da disciplina (`200 OK` / `409 Conflict`).
 * `DELETE /api/disciplinas/{id}` — Remove uma disciplina (`200 OK` / `404 Not Found`).
+
+**Grades Horárias `[Sprint 3 - Gerenciamento de Grades]`:**
+
+* `GET /api/grades` — Listagem paginada de grades (`200 OK`).
+* `GET /api/professores/{id}/grades` — Histórico de grades de um professor (`200 OK`).
+* `GET /api/grades/{id}` — Detalhes de uma grade por ID (`200 OK` / `404 Not Found`).
+* `POST /api/grades` — Cadastro de grade vinculando professor e período letivo (`201 Created`).
+* `PUT /api/grades/{id}` — Atualiza carga horária e vínculos da grade (`200 OK` / `409 Conflict`).
+* `DELETE /api/grades/{id}` — Remove a grade caso não possua disciplinas vinculadas (`200 OK` / `404 Not Found` / `409 Conflict`).
+
+**Disciplinas da Grade `[Sprint 3 - Disciplina da Grade]`:**
+
+* `GET /api/grades/{id}/disciplinas` — Disciplinas vinculadas a uma grade (`200 OK`).
+* `GET /api/disciplinas-grade/{id}` — Detalhes de um vínculo por ID (`200 OK` / `404 Not Found`).
+* `POST /api/disciplinas-grade` — Associa uma disciplina a uma grade e curso (`201 Created`).
+* `PUT /api/disciplinas-grade/{id}` — Atualiza a associação da disciplina (`200 OK`).
+* `DELETE /api/disciplinas-grade/{id}` — Desassocia a disciplina da grade (`200 OK`).
+
+**Aulas da Grade `[Sprint 3 - Aula da Grade]`:**
+
+* `GET /api/disciplinas-grade/{id}/aulas` — Horários de aula de uma disciplina da grade (`200 OK`).
+* `GET /api/aulas-grade/{id}` — Detalhes de um horário de aula por ID (`200 OK` / `404 Not Found`).
+* `POST /api/aulas-grade/disciplinas-grade/{id}/aulas` — Registra novo horário de aula contínuo (`201 Created` / `400 Bad Request` / `409 Conflict`).
+* `PUT /api/aulas-grade/{id}` — Atualiza horários de aula com validação anti-sobreposição (`200 OK` / `400 Bad Request` / `404 Not Found` / `409 Conflict`).
+* `DELETE /api/aulas-grade/{id}` — Remove um horário de aula (`200 OK` / `404 Not Found`).
 
 ### 7.3 Documentação OpenAPI (Swagger) **`[Sprint 1 - Manter Usuário]`**
 
@@ -196,11 +222,11 @@ Todas as requisições da API são padronizadas pela classe `RespostaPadraoDTO` 
 * **Sem Exclusão Física (Soft Delete / Status):** Professores não possuem endpoint de exclusão (`DELETE`) para preservar a integridade histórica de Grades e Folhas de Frequência. O ciclo de vida é alterado via status (`ATIVO`, `INATIVO`, `AFASTADO`).
 * **Busca Flexível:** A busca dinâmica (`?busca=`) filtra por aproximação (`LIKE %termo%`) tanto no nome quanto na matrícula, ignorando maiúsculas/minúsculas.
 
-### 9.3 Gestão de Período Letivo **`[Sprint 2 - Cadastrar Período Letivo]`**
+### 9.3 Gestão de Período Letivo **`[Sprint 2 - Gerenciamento de Período Letivo]`**
 
 * **Obrigatoriedade e Validação de Datas:** `data_inicio` e `data_fim` são obrigatórias para servirem de base na validação da Folha de Frequência. A `data_inicio` deve ser estritamente anterior à `data_fim` (retorna HTTP 400 Bad Request em caso de inconsistência).
-* **Unicidade de Período:** Não é permitido cadastrar dois períodos com o mesmo `ano` e `semestre` (retorna HTTP 409 Conflict via `ConflitoException`).
-* **Escopo Mínimo Operacional:** Implementados apenas o cadastro (`POST`) e consultas (`GET`), sem suporte a edição ou exclusão para preservar a integridade histórica de Grades associadas.
+* **Unicidade de Período:** Não é permitido cadastrar ou atualizar para um período com o mesmo `ano` e `semestre` já cadastrado em outro registro (retorna HTTP 409 Conflict via `ConflitoException`).
+* **Edição de Período:** Suporte à atualização completa (`PUT /api/periodos-letivos/{id}`) para manutenção de datas e períodos acadêmicos.
 * **Ordenação Cronológica:** A listagem geral retorna os períodos ordenados do mais recente para o mais antigo (`ano DESC, semestre DESC`).
 
 ### 9.4 Gestão de Cursos **`[Sprint 2 - Manter Cursos]`**

@@ -41,4 +41,12 @@ public class PeriodoLetivoController {
         PeriodoLetivoRespostaDTO dto = service.buscarPorId(id);
         return ResponseEntity.ok(RespostaPadraoDTO.sucesso("Período letivo encontrado com sucesso.", dto));
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<RespostaPadraoDTO<PeriodoLetivoRespostaDTO>> atualizar(
+            @PathVariable Long id,
+            @Valid @RequestBody PeriodoLetivoRequisicaoDTO requisicao) {
+        PeriodoLetivoRespostaDTO dto = service.atualizar(id, requisicao);
+        return ResponseEntity.ok(RespostaPadraoDTO.sucesso("Período letivo alterado com sucesso.", dto));
+    }
 }

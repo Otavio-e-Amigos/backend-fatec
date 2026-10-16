@@ -10,5 +10,7 @@ import java.util.List;
 public interface DisciplinaDaGradeRepository extends JpaRepository<DisciplinaDaGrade, Long> {
     List<DisciplinaDaGrade> findByGradeId(Long gradeId);
 
+    boolean existsByGradeId(Long gradeId);
+
     boolean existsByGradeIdAndDisciplinaIdAndCursoId(Long gradeId, Long disciplinaId, Long cursoId);
 }

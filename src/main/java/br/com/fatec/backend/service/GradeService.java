@@ -7,6 +7,7 @@ import br.com.fatec.backend.entity.PeriodoLetivo;
 import br.com.fatec.backend.entity.Professor;
 import br.com.fatec.backend.exception.ConflitoException;
 import br.com.fatec.backend.exception.RecursoNaoEncontradoException;
+import br.com.fatec.backend.repository.DisciplinaDaGradeRepository;
 import br.com.fatec.backend.repository.GradeRepository;
 import br.com.fatec.backend.repository.PeriodoLetivoRepository;
 import br.com.fatec.backend.repository.ProfessorRepository;
@@ -23,13 +24,16 @@ public class GradeService {
     private final GradeRepository repository;
     private final ProfessorRepository professorRepository;
     private final PeriodoLetivoRepository periodoLetivoRepository;
+    private final DisciplinaDaGradeRepository disciplinaDaGradeRepository;
 
     public GradeService(GradeRepository repository,
                         ProfessorRepository professorRepository,
-                        PeriodoLetivoRepository periodoLetivoRepository) {
+                        PeriodoLetivoRepository periodoLetivoRepository,
+                        DisciplinaDaGradeRepository disciplinaDaGradeRepository) {
         this.repository = repository;
         this.professorRepository = professorRepository;
         this.periodoLetivoRepository = periodoLetivoRepository;
+        this.disciplinaDaGradeRepository = disciplinaDaGradeRepository;
     }
 
     @Transactional(readOnly = true)
@@ -86,6 +90,16 @@ public class GradeService {
         return GradeRespostaDTO.daEntidade(grade);
     }
 
+    @Transactional
+    public void excluir(Long id) {
+        Grade grade = buscarEntidadePorId(id);
+
+        if (disciplinaDaGradeRepository.existsByGradeId(id)) {
+            throw new ConflitoException("Não é possível excluir a grade pois existem disciplinas vinculadas a ela.");
+        }
+
+        repository.delete(grade);
+    }
 
     private void validarUnicidadeGrade(Long professorId, Long periodoLetivoId, Long idAtual) {
         boolean jaExiste;

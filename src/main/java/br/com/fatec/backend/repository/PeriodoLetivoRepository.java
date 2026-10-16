@@ -11,5 +11,7 @@ public interface PeriodoLetivoRepository extends JpaRepository<PeriodoLetivo, Lo
 
     boolean existsByAnoAndSemestre(Integer ano, Integer semestre);
 
+    boolean existsByAnoAndSemestreAndIdNot(Integer ano, Integer semestre, Long id);
+
     List<PeriodoLetivo> findAllByOrderByAnoDescSemestreDesc();
 }

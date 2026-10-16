@@ -38,6 +38,12 @@ public class AulaDaGrade {
         this.horaFim = horaFim;
     }
 
+    public void atualizarDados(Short diaSemana, LocalTime horaInicio, LocalTime horaFim) {
+        this.diaSemana = diaSemana;
+        this.horaInicio = horaInicio;
+        this.horaFim = horaFim;
+    }
+
     public Long getId() { return id; }
     public DisciplinaDaGrade getDisciplinaDaGrade() { return disciplinaDaGrade; }
     public Short getDiaSemana() { return diaSemana; }

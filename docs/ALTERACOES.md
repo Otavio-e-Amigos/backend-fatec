@@ -69,12 +69,12 @@ Listagem das novas rotas ou alterações nos contratos existentes:
 
 - **Decisões Tomadas:**
     - **Métricas de Carga Horária Opcionais:** Os campos `semanal`, `mensal` e `total` aceitam valores nulos (`null`) no cadastro e na edição, permitindo o registro do vínculo docente mesmo sem o preenchimento detalhado das horas (essencial para geração de documentos e cenários iniciais).
-    - **Preservação de Histórico (Soft / Sem Delete):** Ausência intencional de exclusão física (`DELETE /api/grades`) para proteger o histórico acadêmico de períodos letivos passados. O ciclo de vida se baseia na criação de novas grades por período.
+    - **Exclusão com Integridade Referencial:** Disponibilização de exclusão física (`DELETE /api/grades/{id}`) condicionada à inexistência de disciplinas vinculadas à grade. Caso existam vínculos em `disciplina_da_grade`, a exclusão é rejeitada com HTTP 409 Conflict.
 
 - **Regras de Negócio e Validações:**
     - *Regra 1 (Unicidade por Professor e Período):* Impedimento de cadastro ou atualização de mais de uma grade para o mesmo professor no mesmo período letivo (retorna HTTP 409 Conflict via `ConflitoException`).
     - *Regra 2 (Validação de Carga Horária):* Caso informadas, as métricas numéricas devem ser obrigatoriamente maiores ou iguais a zero (`@PositiveOrZero`).
-    - *Regra 3 (Integridade Referencial Estrita):* As chaves estrangeiras (`professor_id` e `periodo_letivo_id`) contam com `ON DELETE RESTRICT` no banco de dados para bloquear exclusões acidentais de registros vinculados.
+    - *Regra 3 (Integridade Referencial Estrita):* As chaves estrangeiras (`professor_id` e `periodo_letivo_id`) contam com `ON DELETE RESTRICT` no banco de dados para bloquear exclusões acidentais de registros vinculados, além da validação prévia de disciplinas associadas via serviço.
 
 #### 3. Impactos em Segurança e Perfis de Acesso
 
@@ -88,6 +88,7 @@ Listagem das novas rotas ou alterações nos contratos existentes:
 - `GET /api/professores/{id}/grades` — Retorna o histórico completo de grades de um professor específico (`200 OK`).
 - `GET /api/grades/{id}` — Consulta detalhada de uma grade específica por ID (`200 OK` / `404 Not Found`).
 - `PUT /api/grades/{id}` — Atualiza dados da grade (carga horária e vínculos), atualizando automaticamente o `updated_at` (`200 OK` / `409 Conflict`).
+- `DELETE /api/grades/{id}` — Remove uma grade do sistema caso não possua disciplinas vinculadas (`200 OK` / `404 Not Found` / `409 Conflict`).
 
 #### 5. Banco de Dados e Persistência
 
@@ -151,10 +152,11 @@ Listagem das novas rotas ou alterações nos contratos existentes:
 - **Decisões Tomadas:**
   - **Abordagem de Bloco Contínuo:** Períodos longos de aula (ex: 13:00 às 18:20) são gravados em um único registro contínuo por sessão, ficando a expansão programática para slots de 50 minutos sob responsabilidade da camada de serviço.
   - **Validação de Conflito em Camada de Serviço:** Como a tabela de aulas aponta indiretamente para a Grade através de `DISCIPLINA_DA_GRADE`, a regra complexa de prevenção de sobreposição de horários na mesma grade é processada de forma centralizada no `AulaDaGradeService` utilizando comparação temporal matemática (`(StartA < EndB) && (StartB < EndA)`).
+  - **Edição com Revalidação Temporal:** Suporte à atualização de blocos (`PUT /api/aulas-grade/{id}`), desconsiderando a própria aula no cálculo de sobreposições da grade.
 
 - **Regras de Negócio e Validações:**
   - *Regra 1 (Validação Temporal):* A `hora_fim` deve ser obrigatoriamente posterior à `hora_inicio`, garantida tanto via `CHECK` no banco de dados quanto por validação no serviço (lançando `RegraNegocioException` / `400 Bad Request`).
-  - *Regra 2 (Bloqueio de Sobreposição):* Tentativas de alocar horários conflitantes no mesmo dia para a mesma grade bloqueiam a operação imediatamente (lançando `ConflitoException` / `409 Conflict`).
+  - *Regra 2 (Bloqueio de Sobreposição):* Tentativas de alocar horários conflitantes no mesmo dia para a mesma grade bloqueiam a operação imediatamente (lançando `ConflitoException` / `409 Conflict`), tanto na criação quanto na atualização.
   - *Regra 3 (Domínio de Dias da Semana):* O campo `dia_semana` valida rigorosamente a faixa numérica de 1 a 7 conforme o padrão ISO-8601.
   - *Regra 4 (Integridade Referencial Estrita):* A chave estrangeira `disciplina_grade_id` utiliza restrição `ON DELETE RESTRICT`.
 
@@ -165,8 +167,10 @@ Listagem das novas rotas ou alterações nos contratos existentes:
 
 #### 4. Endpoints e Contratos da API
 
-- `POST /api/disciplinas-grade/{id}/aulas` — Registra os horários de aula em bloco contínuo para uma disciplina da grade (`201 Created` / `400 Bad Request` / `409 Conflict`).
+- `POST /api/aulas-grade/disciplinas-grade/{id}/aulas` — Registra os horários de aula em bloco contínuo para uma disciplina da grade (`201 Created` / `400 Bad Request` / `409 Conflict`).
 - `GET /api/disciplinas-grade/{id}/aulas` — Retorna todas as aulas vinculadas a uma disciplina da grade específica (`200 OK`).
+- `GET /api/aulas-grade/{id}` — Consulta os dados de um horário de aula específico por ID (`200 OK` / `404 Not Found`).
+- `PUT /api/aulas-grade/{id}` — Atualiza os horários e dia da semana da aula da grade com validação anti-sobreposição (`200 OK` / `400 Bad Request` / `404 Not Found` / `409 Conflict`).
 - `DELETE /api/aulas-grade/{id}` — Remove um horário de aula cadastrado (`200 OK` / `404 Not Found`).
 
 #### 5. Banco de Dados e Persistência
@@ -175,6 +179,39 @@ Listagem das novas rotas ou alterações nos contratos existentes:
 - **Alterações de Schema:**
   - Criação da tabela `aula_da_grade` com colunas `id`, `disciplina_grade_id`, `dia_semana` (SMALLINT), `hora_inicio` (TIME) e `hora_fim` (TIME).
   - Adição de índice na FK `disciplina_grade_id` e constraints `CHECK` para validação de horários e dias da semana.
+
+---
+
+### [Sprint 3] Edição de Período Letivo
+
+1. #### Visão Geral e Mapeamento
+
+- **Data da Conclusão:** 16/10/2026
+- **Mapeamento de Escopo:** Implementação da rota de atualização/edição de períodos letivos (`PUT /api/periodos-letivos/{id}`) para manutenção de datas e semestres letivos, mantendo as regras de integridade e unicidade do sistema acadêmico.
+
+#### 2. Alterações e Decisões de Negócio
+
+- **Decisões Tomadas:**
+  - **Flexibilização de Manutenção do Período:** Permissão controlada de edição de períodos já cadastrados, permitindo a correção de datas operacionais de início/término e semestre/ano.
+
+- **Regras de Negócio e Validações:**
+  - *Regra 1 (Validação de Intervalo de Datas):* A `data_inicio` deve ser estritamente anterior à `data_fim` (`RegraNegocioException` / `400 Bad Request`).
+  - *Regra 2 (Unicidade de Ano e Semestre):* Validação via `existsByAnoAndSemestreAndIdNot` garantindo que a alteração não conflite com outro período letivo já cadastrado com o mesmo `ano` e `semestre` (`ConflitoException` / `409 Conflict`).
+  - *Regra 3 (Existência do Registro):* Caso o ID informado na URL não exista, retorna `404 Not Found` via `RecursoNaoEncontradoException`.
+
+#### 3. Impactos em Segurança e Perfis de Acesso
+
+- **Permissões:** A rota `PUT /api/periodos-letivos/{id}` exige autenticação obrigatória via Bearer Token e permissão para os perfis **`TI`** ou **`RESPONSAVEL`** (`hasAnyRole("TI", "RESPONSAVEL")`).
+- **Regras de Bloqueio:** Tentativas sem token (`401`) ou por usuários sem o perfil adequado (`403`) são tratadas e bloqueadas.
+
+#### 4. Endpoints e Contratos da API
+
+- `PUT /api/periodos-letivos/{id}` — Atualiza semestre, ano, data inicial e final de um período letivo (`200 OK` / `400 Bad Request` / `404 Not Found` / `409 Conflict`).
+
+#### 5. Banco de Dados e Persistência
+
+- **Migrations Flyway:** Utiliza a tabela já existente `periodo_letivo` (criada em `V7__criacao_periodo_letivo.sql`).
+- **Alterações de Schema:** Nenhuma alteração estrutural no banco; reutilização da constraint `uk_periodo_letivo_ano_semestre` e checks de data.
 
 
 ---

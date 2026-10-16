@@ -36,6 +36,20 @@ public class AulaDaGradeController {
                 .body(RespostaPadraoDTO.criado("Horário de aula registrado com sucesso.", resposta));
     }
 
+    @GetMapping("/aulas-grade/{id}")
+    public ResponseEntity<RespostaPadraoDTO<AulaDaGradeRespostaDTO>> buscarPorId(@PathVariable Long id) {
+        AulaDaGradeRespostaDTO resposta = service.buscarPorId(id);
+        return ResponseEntity.ok(RespostaPadraoDTO.sucesso("Horário de aula recuperado com sucesso.", resposta));
+    }
+
+    @PutMapping("/aulas-grade/{id}")
+    public ResponseEntity<RespostaPadraoDTO<AulaDaGradeRespostaDTO>> atualizar(
+            @PathVariable Long id,
+            @Valid @RequestBody AulaDaGradeRequisicaoDTO requisicao) {
+        AulaDaGradeRespostaDTO resposta = service.atualizar(id, requisicao);
+        return ResponseEntity.ok(RespostaPadraoDTO.sucesso("Horário de aula alterado com sucesso.", resposta));
+    }
+
     @DeleteMapping("/aulas-grade/{id}")
     public ResponseEntity<RespostaPadraoDTO<Void>> excluir(@PathVariable Long id) {
         service.excluir(id);

@@ -33,6 +33,13 @@ public class PeriodoLetivo {
         this.dataFim = dataFim;
     }
 
+    public void atualizarDados(Integer semestre, Integer ano, LocalDate dataInicio, LocalDate dataFim) {
+        this.semestre = semestre;
+        this.ano = ano;
+        this.dataInicio = dataInicio;
+        this.dataFim = dataFim;
+    }
+
     public Long getId() { return id; }
     public Integer getSemestre() { return semestre; }
     public Integer getAno() { return ano; }

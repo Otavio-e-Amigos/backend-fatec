@@ -87,7 +87,7 @@ public class SecurityConfig {
                         // 7. Gerenciamento de Períodos Letivos (AMBOS para os perfis TI/Responsável)
                         .requestMatchers("/api/periodos-letivos/**").hasAnyRole("TI", "RESPONSAVEL")
                         // 8. Gerenciamento de Grade (AMBOS para os perfis TI/Responsável)
-                        .requestMatchers("/api/grade/**").hasAnyRole("TI", "RESPONSAVEL")
+                        .requestMatchers("/api/grades/**", "/api/grade/**").hasAnyRole("TI", "RESPONSAVEL")
                         // 9. Gerenciamento de Disciplinas Grade (AMBOS para os perfis TI/Responsável)
                         .requestMatchers("/api/disciplinas-grade/**").hasAnyRole("TI", "RESPONSAVEL")
                         // 10. Gerenciamento de Aula da Grade (AMBOS para os perfis TI/Responsável)

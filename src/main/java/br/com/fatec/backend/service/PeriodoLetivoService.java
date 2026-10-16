@@ -43,6 +43,31 @@ public class PeriodoLetivoService {
         return PeriodoLetivoRespostaDTO.daEntidade(repository.save(periodo));
     }
 
+    @Transactional
+    public PeriodoLetivoRespostaDTO atualizar(Long id, PeriodoLetivoRequisicaoDTO requisicao) {
+        PeriodoLetivo periodo = repository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Período letivo não encontrado com o ID: " + id));
+
+        if (repository.existsByAnoAndSemestreAndIdNot(requisicao.ano(), requisicao.semestre(), id)) {
+            throw new ConflitoException(
+                    "Período letivo " + requisicao.ano() + "/" + requisicao.semestre() + " já cadastrado."
+            );
+        }
+
+        if (!requisicao.dataInicio().isBefore(requisicao.dataFim())) {
+            throw new RegraNegocioException("A data inicial deve ser anterior à data final.");
+        }
+
+        periodo.atualizarDados(
+                requisicao.semestre(),
+                requisicao.ano(),
+                requisicao.dataInicio(),
+                requisicao.dataFim()
+        );
+
+        return PeriodoLetivoRespostaDTO.daEntidade(periodo);
+    }
+
     @Transactional(readOnly = true)
     public List<PeriodoLetivoRespostaDTO> listarTodos() {
         return repository.findAllByOrderByAnoDescSemestreDesc().stream()

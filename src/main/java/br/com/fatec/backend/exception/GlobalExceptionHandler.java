@@ -137,5 +137,29 @@ public class GlobalExceptionHandler {
                         HttpStatus.INTERNAL_SERVER_ERROR.value()));
     }
 
+    @ExceptionHandler(ExtracaoIndisponivelException.class)
+    public ResponseEntity<RespostaPadraoDTO<Void>> handleExtracaoIndisponivel(ExtracaoIndisponivelException ex) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(RespostaPadraoDTO.erro(ex.getMessage(), HttpStatus.SERVICE_UNAVAILABLE.value()));
+    }
 
+    @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
+    public ResponseEntity<RespostaPadraoDTO<Void>> handleArquivoGrande() {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(RespostaPadraoDTO.erro("O arquivo excede o tamanho máximo de 10 MB.",
+                        HttpStatus.BAD_REQUEST.value()));
+    }
+
+    @ExceptionHandler(org.springframework.web.multipart.support.MissingServletRequestPartException.class)
+    public ResponseEntity<RespostaPadraoDTO<Void>> handleArquivoAusente() {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(RespostaPadraoDTO.erro("Envie o arquivo PDF no campo 'arquivo'.",
+                        HttpStatus.BAD_REQUEST.value()));
+    }
+
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    public ResponseEntity<RespostaPadraoDTO<Void>> handleRecursoEstaticoAusente() {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(RespostaPadraoDTO.erro("Recurso não encontrado.", HttpStatus.NOT_FOUND.value()));
+    }
 }

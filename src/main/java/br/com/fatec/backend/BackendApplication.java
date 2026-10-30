@@ -2,12 +2,14 @@ package br.com.fatec.backend;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
 /**
  * Classe principal responsável por iniciar
  * a.md aplicação Spring Boot.
  */
 @SpringBootApplication
+@ConfigurationPropertiesScan
 public class BackendApplication {
 
     public static void main(String[] args) {

@@ -66,3 +66,4 @@ Listagem das novas rotas ou alterações nos contratos existentes:
 * **[Sprint 1 e 2]** Manter Professores (Docentes) e Configurações Iniciais de Banco — *Promovido ao DOCUMENTACAO.md*
 * **[Sprint 2]** Cadastros Básicos (Período Letivo, Cursos e Disciplinas) — *Promovido ao DOCUMENTACAO.md*
 * **[Sprint 3]** Cadastro e Gerenciamento de Grades, Disciplinas da Grade, Aulas da Grade e Edição de Período Letivo — *Promovido ao DOCUMENTACAO.md*
+* **[Sprint 4]** Geração de Documentos — Módulo Folha de Ponto / Folha de Frequência (DOCX via Apache POI) — *Promovido ao DOCUMENTACAO.md*

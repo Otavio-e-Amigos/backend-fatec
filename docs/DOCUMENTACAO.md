@@ -241,6 +241,12 @@ Todas as requisições da API são padronizadas pela classe `RespostaPadraoDTO` 
 * ` PUT /api/aulas-grade/{id}` — Atualiza horários de aula com validação anti-sobreposição (`200 OK` / `400 Bad Request` / `404 Not Found` / `409 Conflict`).
 * ` DELETE /api/aulas-grade/{id}` — Remove um horário de aula (`200 OK` / `404 Not Found`).
 
+**Folhas de Ponto / Frequência `[Sprint 4 - Geração de Folha de Ponto]`:**
+
+* ` POST /api/folhas-ponto/preview` e `GET /api/folhas-ponto/preview` — Retorna os dados estruturados da prévia para conferência acadêmica (`200 OK` / `400 Bad Request` / `404 Not Found`).
+* ` POST /api/folhas-ponto/gerar` e `GET /api/folhas-ponto/gerar` — Preenche o modelo DOCX oficial e retorna o arquivo para download (`200 OK` / `400 Bad Request` / `404 Not Found`).
+* *Nota:* As rotas também respondem sob o path alternativo canônico `/api/folhas-frequencia/**`.
+
 ### 7.3 Documentação OpenAPI (Swagger) **`[Sprint 1 - Manter Usuário]`**
 
 ## As rotas da API estão documentadas dinamicamente via OpenAPI, disponíveis nos endpoints públicos `/v3/api-docs/**` e `/swagger-ui/**`.
@@ -249,9 +255,33 @@ A paginação do Spring Data é anotada com `@ParameterObject` para permitir o p
 
 ---
 
-## 8. Geração de Documents
+## 8. Geração de Documentos `[Sprint 4 - Folha de Ponto]`
 
-O sistema suporta a exportação e geração de relatórios acadêmicos e folhas de frequência com base nas informações consolidadas das grades horárias e cadastros de docentes.
+O sistema suporta a exportação da **Folha de Ponto / Folha de Frequência** oficial dos docentes em formato Word (`.docx`), integrando dados do banco de dados, motor de templates Apache POI e regras do Calendário Acadêmico.
+
+### 8.1 Princípios de Geração
+* **Preservação do Modelo:** O arquivo original `src/main/resources/templates/folha-de-ponto-modelo.docx` é estritamente somente leitura. A geração opera integralmente em memória através de `InputStream` e `ByteArrayOutputStream`, devolvendo o arquivo gerado via download HTTP sem persistir arquivos temporários no servidor.
+* **Integridade Visual:** Fontes, margens, larguras de coluna, alturas de linha e bordas oficiais são 100% preservadas.
+
+### 8.2 Substituição de Placeholders Multi-Run
+O Apache POI processa os placeholders mesmo quando fragmentados em múltiplos runs XML pelo Word:
+* `{{PROFESSOR}}`: Nome completo do docente cadastrado.
+* `{{COD}}`: Código do professor (ou vazio se inexistente).
+* `{{MAT}}`: Matrícula do professor.
+* `{{RJ}}`: Regime Jurídico (ex: `CLT`, `PSS`) ou Contrato (`INDETERMINADO`, `DETERMINADO`, `TEMPORARIO`).
+* `{{MES}}` e `{{ANO}}`: Mês e ano selecionados, atualizando o título oficial (`FOLHA DE FREQUÊNCIA – MM/AAAA`).
+
+### 8.3 Grade Horária Integrada
+* Mapeamento dos slots 1º a 6º (Manhã e Tarde) e 1º a 4º (Noite) para os dias de Segunda a Sábado (ISO-8601 dias 1 a 6).
+* Suporte a células mescladas na tabela oficial através do cálculo dinâmico de `gridSpan`.
+* Preenchimento da sigla da disciplina alinhada ao centro e em fonte tamanho 9.
+* Suporte tanto a aulas de duração padrão (~50 minutos) quanto a blocos contínuos longos (ex: 13:00 às 18:20).
+
+### 8.4 Calendário e Frequência Mensal
+* **Preenchimento dos Dias:** Dias 01 a 31 e respectivos nomes em português (Segunda a Domingo).
+* **Sombreamento de Domingos:** Linha integralmente sombreada com preenchimento cinza `#D9D9D9`. Dias úteis recebem preenchimento branco `#FFFFFF`.
+* **Meses com Menos de 31 Dias:** Limpeza total e formatação em branco das linhas inexistentes (ex: dias 29, 30 e 31 em fevereiro; dia 31 em meses de 30 dias).
+* **Calendário Acadêmico:** Consulta integrada de feriados e dias sem aula para acompanhamento e notas no preview.
 
 ---
 

@@ -92,6 +92,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/disciplinas-grade/**").hasAnyRole("TI", "RESPONSAVEL")
                         // 10. Gerenciamento de Aula da Grade (AMBOS para os perfis TI/Responsável)
                         .requestMatchers("/api/aulas-grade/**").hasAnyRole("TI", "RESPONSAVEL")
+                        // 11. Geração de Folha de Ponto (AMBOS para os perfis TI/Responsável)
+                        .requestMatchers("/api/folhas-ponto/**").hasAnyRole("TI", "RESPONSAVEL")
+                        // 12. Gestão do Calendário Acadêmico em memória (AMBOS para os perfis TI/Responsável)
+                        .requestMatchers("/api/calendario/**").hasAnyRole("TI", "RESPONSAVEL")
 
                         // Qualquer outro endpoint exige autenticação por padrão
                         .anyRequest().authenticated()

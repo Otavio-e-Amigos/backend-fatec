@@ -1,8 +1,12 @@
 package br.com.fatec.backend.service.extracao;
 
 import br.com.fatec.backend.dto.extracao_grade.GradeExtraidaDTO;
+import br.com.fatec.backend.entity.Usuario;
 import br.com.fatec.backend.exception.RegraNegocioException;
+import br.com.fatec.backend.repository.UsuarioRepository;
 import br.com.fatec.backend.service.extracao.ValidadorGradeExtraida.Resultado;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,13 +21,21 @@ public class ExtracaoGradeService {
 
     private final ExtratorDeGrade extrator;
     private final ValidadorGradeExtraida validador;
+    private final UsuarioRepository usuarioRepository;
 
-    public ExtracaoGradeService(ExtratorDeGrade extrator, ValidadorGradeExtraida validador) {
+    public ExtracaoGradeService(ExtratorDeGrade extrator,
+                                ValidadorGradeExtraida validador,
+                                UsuarioRepository usuarioRepository) {
         this.extrator = extrator;
         this.validador = validador;
+        this.usuarioRepository = usuarioRepository;
     }
 
     public GradeExtraidaDTO extrair(MultipartFile arquivo) {
+        return extrair(arquivo, null);
+    }
+
+    public GradeExtraidaDTO extrair(MultipartFile arquivo, String apiKeyInformada) {
         if (arquivo == null || arquivo.isEmpty()) {
             throw new RegraNegocioException("O arquivo enviado está vazio.");
         }
@@ -42,8 +54,10 @@ public class ExtracaoGradeService {
             throw new RegraNegocioException("Formato inválido: envie um arquivo PDF.");
         }
 
-        Resultado r = validador.processar(extrator.extrair(bytes));
-        return r.dados().comAvisos(r.problemas());   // problemas viram avisos
+        String apiKeyEfetiva = resolverApiKey(apiKeyInformada);
+
+        Resultado r = validador.processar(extrator.extrair(bytes, apiKeyEfetiva));
+        return r.dados().comAvisos(r.problemas());
     }
 
     public GradeExtraidaDTO validar(GradeExtraidaDTO dados) {
@@ -52,6 +66,25 @@ public class ExtracaoGradeService {
             throw new RegraNegocioException("Dados inválidos: " + String.join("; ", r.problemas()));
         }
         return r.dados();
+    }
+
+    private String resolverApiKey(String apiKeyInformada) {
+        if (apiKeyInformada != null && !apiKeyInformada.isBlank()) {
+            return apiKeyInformada.trim();
+        }
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && auth.getPrincipal() != null) {
+            try {
+                Long usuarioId = Long.parseLong(auth.getPrincipal().toString());
+                return usuarioRepository.findById(usuarioId)
+                        .map(Usuario::getGeminiApiKey)
+                        .filter(k -> !k.isBlank())
+                        .orElse(null);
+            } catch (Exception ignored) {
+            }
+        }
+        return null;
     }
 
     private boolean comecaComAssinaturaPdf(byte[] bytes) {

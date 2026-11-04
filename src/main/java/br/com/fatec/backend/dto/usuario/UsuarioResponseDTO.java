@@ -16,7 +16,8 @@ public record UsuarioResponseDTO(
         Perfil perfil,
         boolean ativo,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+        boolean possuiApiKeyGemini
 ) {
     public static UsuarioResponseDTO daEntidade(Usuario usuario) {
         return new UsuarioResponseDTO(
@@ -26,7 +27,8 @@ public record UsuarioResponseDTO(
                 usuario.getPerfil(),
                 usuario.isAtivo(),
                 usuario.getCriadoEm(),
-                usuario.getAtualizadoEm()
+                usuario.getAtualizadoEm(),
+                usuario.getGeminiApiKey() != null && !usuario.getGeminiApiKey().isBlank()
         );
     }
 }

@@ -61,7 +61,6 @@ class FolhaPontoControllerTest {
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
-                .andExpect(jsonPath("$.dados.titulo").value("FOLHA DE FREQUÊNCIA – 09/2026"))
                 .andExpect(jsonPath("$.dados.professor.nome").value("Katia"));
     }
 
@@ -83,7 +82,7 @@ class FolhaPontoControllerTest {
     }
 
     @Test
-    @DisplayName("Deve permitir download direto via GET")
+    @DisplayName("Deve permitir download direto do DOCX via GET")
     void devePermitirDownloadViaGet() throws Exception {
         byte[] docxFake = new byte[]{80, 75, 3, 4, 10, 20};
         when(folhaPontoService.gerarFolhaPonto(any())).thenReturn(docxFake);

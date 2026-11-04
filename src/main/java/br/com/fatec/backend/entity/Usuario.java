@@ -39,6 +39,9 @@ public class Usuario {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime atualizadoEm;
 
+    @Column(name = "gemini_api_key", length = 200)
+    private String geminiApiKey;
+
     /** Exigido pelo JPA. */
     protected Usuario() {
     }
@@ -71,6 +74,9 @@ public class Usuario {
         this.ativo = false;
     }
 
+    public void atualizarGeminiApiKey(String geminiApiKey) { this.geminiApiKey = geminiApiKey; }
+    public void removerGeminiApiKey() { this.geminiApiKey = null; }
+
     public Long getId() { return id; }
     public String getNome() { return nome; }
     public String getLogin() { return login; }
@@ -79,4 +85,5 @@ public class Usuario {
     public boolean isAtivo() { return ativo; }
     public LocalDateTime getCriadoEm() { return criadoEm; }
     public LocalDateTime getAtualizadoEm() { return atualizadoEm; }
+    public String getGeminiApiKey() { return geminiApiKey; }
 }

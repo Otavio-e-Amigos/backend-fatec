@@ -25,7 +25,7 @@ import java.util.Map;
 
 /**
  * Serviço que coordena a busca de informações no banco de dados e a geração
- * da Folha de Ponto / Frequência dos docentes.
+ * da Folha de Ponto / Frequência dos docentes no formato oficial DOCX.
  */
 @Service
 public class FolhaPontoService {
@@ -216,13 +216,12 @@ public class FolhaPontoService {
             throw new RegraNegocioException("O professor informado não possui nenhuma grade horária cadastrada.");
         }
 
-        // Tenta encontrar a grade referente ao semestre do mês
         int semestreEsperado = (mes <= 6) ? 1 : 2;
         return grades.stream()
                 .filter(g -> g.getPeriodoLetivo() != null
                         && g.getPeriodoLetivo().getAno().equals(ano)
                         && g.getPeriodoLetivo().getSemestre().equals(semestreEsperado))
                 .findFirst()
-                .orElse(grades.get(grades.size() - 1)); // Retorna a última grade cadastrada caso não haja do semestre exato
+                .orElse(grades.get(grades.size() - 1));
     }
 }

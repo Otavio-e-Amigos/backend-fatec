@@ -2,6 +2,7 @@ package br.com.fatec.backend.service.extracao;
 
 import br.com.fatec.backend.config.GeminiProperties;
 import br.com.fatec.backend.dto.extracao_grade.GradeExtraidaDTO;
+import br.com.fatec.backend.exception.ExtracaoComFallbackException;
 import br.com.fatec.backend.exception.ExtracaoIndisponivelException;
 import br.com.fatec.backend.exception.RegraNegocioException;
 import com.google.genai.Client;
@@ -17,6 +18,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.json.JsonMapper;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 public class GeminiExtratorDeGrade implements ExtratorDeGrade {
@@ -73,7 +77,7 @@ public class GeminiExtratorDeGrade implements ExtratorDeGrade {
 
     private final GeminiProperties props;
     private final JsonMapper jsonMapper;
-    private volatile Client client;
+    private volatile Client clientPadrao;
 
     public GeminiExtratorDeGrade(GeminiProperties props, JsonMapper jsonMapper) {
         this.props = props;
@@ -82,30 +86,49 @@ public class GeminiExtratorDeGrade implements ExtratorDeGrade {
 
     @Override
     public GradeExtraidaDTO extrair(byte[] pdf) {
-        if (props.apiKey() == null || props.apiKey().isBlank()) {
-            throw new ExtracaoIndisponivelException(
-                    "O serviço de extração não está configurado (GEMINI_API_KEY ausente).");
-        }
-
-        String texto = chamarGemini(pdf);
-
-        if (texto == null || texto.isBlank()) {
-            throw new RegraNegocioException(
-                    "Não foi possível extrair dados do arquivo. Verifique se é uma grade válida e tente novamente.");
-        }
-
-        try {
-            return jsonMapper.readValue(limparCercas(texto), GradeExtraidaDTO.class);
-        } catch (JacksonException e) {
-            // Não loga o conteúdo: contém nome e CPF do professor.
-            log.warn("Resposta do Gemini fora do formato esperado: {}", e.getClass().getSimpleName());
-            throw new RegraNegocioException(
-                    "Não foi possível interpretar a grade enviada. Tente novamente ou verifique o arquivo.");
-        }
+        return extrair(pdf, null);
     }
 
-    private String chamarGemini(byte[] pdf) {
-        try {
+    @Override
+    public GradeExtraidaDTO extrair(byte[] pdf, String apiKeyUsuario) {
+        boolean temChaveUsuario = apiKeyUsuario != null && !apiKeyUsuario.isBlank();
+        boolean temChavePadrao = props.apiKey() != null && !props.apiKey().isBlank();
+
+        if (!temChaveUsuario && !temChavePadrao) {
+            throw new ExtracaoIndisponivelException(
+                    "O serviço de extração não está configurado (nenhuma chave de API do Gemini informada ou configurada no servidor).");
+        }
+
+        List<String> avisosFallback = new ArrayList<>();
+
+        if (temChaveUsuario) {
+            try {
+                String texto = chamarGeminiComChave(pdf, apiKeyUsuario, true);
+                return parsearResposta(texto, avisosFallback);
+            } catch (ExtracaoComFallbackException fallback) {
+                log.warn("Chave do usuário atingiu cota. Alternando para a chave padrão do sistema: {}", fallback.getMessage());
+                avisosFallback.add(fallback.getMessage());
+
+                if (!temChavePadrao) {
+                    throw new ExtracaoIndisponivelException(
+                            "Sua chave do Gemini atingiu o limite de requisições e não há chave padrão configurada no servidor.");
+                }
+            } catch (ApiException e) {
+                if (e.code() == 401 || e.code() == 403) {
+                    throw new ExtracaoIndisponivelException(
+                            "Chave da API do Gemini incorreta ou sem permissão. Verifique sua chave em 'Meu Perfil' ou utilize a padrão.");
+                }
+                throw e;
+            }
+        }
+
+        // Executa com a chave padrão do sistema (.env)
+        String texto = chamarGeminiComChave(pdf, props.apiKey(), false);
+        return parsearResposta(texto, avisosFallback);
+    }
+
+    private String chamarGeminiComChave(byte[] pdf, String apiKey, boolean isChaveUsuario) {
+        try (Client client = Client.builder().apiKey(apiKey).build()) {
             Content conteudo = Content.fromParts(
                     Part.fromBytes(pdf, "application/pdf"),
                     Part.fromText(PROMPT));
@@ -118,35 +141,60 @@ public class GeminiExtratorDeGrade implements ExtratorDeGrade {
                     .build();
 
             GenerateContentResponse resposta =
-                    client().models.generateContent(props.model(), conteudo, config);
+                    client.models.generateContent(props.model(), conteudo, config);
             return resposta.text();
 
         } catch (ApiException e) {
             log.error("Gemini retornou erro HTTP {}: {}", e.code(), e.getMessage());
-            String msg = e.code() == 429
-                    ? "Limite de uso do serviço de extração atingido. Tente novamente em instantes."
-                    : "O serviço de extração está indisponível no momento. Tente novamente mais tarde.";
+
+            if (e.code() == 429) {
+                if (isChaveUsuario) {
+                    throw new ExtracaoComFallbackException(
+                            "Sua chave da API do Gemini atingiu o limite de requisições (cota esgotada). A extração foi realizada com sucesso utilizando a chave padrão do sistema.");
+                } else {
+                    throw new ExtracaoIndisponivelException(
+                            "O limite de uso do serviço de extração (chave padrão do sistema) foi atingido. Tente novamente mais tarde ou configure sua própria chave de API em 'Meu Perfil'.");
+                }
+            }
+
+            String msg = switch (e.code()) {
+                case 400 -> "Requisição inválida para a API do Gemini. Verifique os dados do arquivo.";
+                case 401, 403 -> isChaveUsuario
+                        ? "Chave da API do Gemini fornecida é inválida ou expirou. Verifique suas configurações em 'Meu Perfil'."
+                        : "Chave da API do Gemini do sistema está inválida ou expirada. Contate o suporte ou configure sua chave própria em 'Meu Perfil'.";
+                case 404 -> "Modelo '" + props.model() + "' não encontrado ou indisponível para esta chave de API.";
+                case 503 -> "O serviço do Google Gemini está temporariamente sobrecarregado ou indisponível. Tente novamente em instantes.";
+                default -> "O serviço de extração retornou erro HTTP " + e.code() + ". Tente novamente mais tarde.";
+            };
             throw new ExtracaoIndisponivelException(msg);
+        } catch (ExtracaoComFallbackException e) {
+            throw e;
         } catch (RuntimeException e) {
-            log.error("Falha ao chamar o Gemini", e);
+            log.error("Falha ao comunicar com o Google Gemini", e);
             throw new ExtracaoIndisponivelException(
-                    "Não foi possível se comunicar com o serviço de extração. Tente novamente mais tarde.");
+                    "Não foi possível estabelecer conexão com o serviço do Gemini. Verifique sua conexão e tente novamente.");
         }
     }
 
-    /** Cria o cliente só no primeiro uso, para a aplicação subir mesmo sem a chave. */
-    private Client client() {
-        Client c = client;
-        if (c == null) {
-            synchronized (this) {
-                c = client;
-                if (c == null) {
-                    c = Client.builder().apiKey(props.apiKey()).build();
-                    client = c;
-                }
-            }
+    private GradeExtraidaDTO parsearResposta(String texto, List<String> avisos) {
+        if (texto == null || texto.isBlank()) {
+            throw new RegraNegocioException(
+                    "Não foi possível extrair dados do arquivo. Verifique se é uma grade horária válida da FATEC e tente novamente.");
         }
-        return c;
+
+        try {
+            GradeExtraidaDTO dto = jsonMapper.readValue(limparCercas(texto), GradeExtraidaDTO.class);
+            if (!avisos.isEmpty()) {
+                List<String> todosAvisos = new ArrayList<>(dto.avisos());
+                todosAvisos.addAll(avisos);
+                return dto.comAvisos(todosAvisos);
+            }
+            return dto;
+        } catch (JacksonException e) {
+            log.warn("Resposta do Gemini fora do formato esperado: {}", e.getClass().getSimpleName());
+            throw new RegraNegocioException(
+                    "Não foi possível interpretar os dados extraídos pelo Gemini. Verifique a qualidade do PDF e tente novamente.");
+        }
     }
 
     /** Defesa: remove cercas ```json caso o modelo as inclua. */
@@ -160,8 +208,8 @@ public class GeminiExtratorDeGrade implements ExtratorDeGrade {
 
     @PreDestroy
     void fechar() {
-        if (client != null) {
-            client.close();
+        if (clientPadrao != null) {
+            clientPadrao.close();
         }
     }
 }

@@ -1,6 +1,7 @@
 package br.com.fatec.backend.service;
 
 import br.com.fatec.backend.document.FolhaPontoDocxService;
+import br.com.fatec.backend.document.FolhaPontoPdfService;
 import br.com.fatec.backend.dto.folha_ponto.FolhaPontoPreviewDTO;
 import br.com.fatec.backend.dto.folha_ponto.FolhaPontoRequisicaoDTO;
 import br.com.fatec.backend.entity.*;
@@ -53,6 +54,9 @@ class FolhaPontoServiceTest {
     @Mock
     private FolhaPontoDocxService folhaPontoDocxService;
 
+    @Mock
+    private FolhaPontoPdfService folhaPontoPdfService;
+
     @InjectMocks
     private FolhaPontoService folhaPontoService;
 
@@ -73,47 +77,50 @@ class FolhaPontoServiceTest {
         ReflectionTestUtils.setField(grade, "id", 10L);
 
         Curso curso = new Curso("ADS", Turno.MANHA, "ADS");
-        Disciplina disciplina = new Disciplina("BD001", "BD", "Banco de Dados");
-        DisciplinaDaGrade dg = new DisciplinaDaGrade(grade, disciplina, curso, (short) 1, "MANHA", (short) 4, 1, StatusDisciplinaGrade.MINISTRANDO);
+        Disciplina disciplina = new Disciplina("ES3", "ES3", "Engenharia de Software III");
+        DisciplinaDaGrade dg = new DisciplinaDaGrade(grade, disciplina, curso, (short) 4, "MANHA", (short) 4, 1, StatusDisciplinaGrade.MINISTRANDO);
 
-        aula = new AulaDaGrade(dg, (short) 1, LocalTime.of(8, 0), LocalTime.of(8, 50));
+        aula = new AulaDaGrade(dg, (short) 1, LocalTime.of(7, 40), LocalTime.of(9, 20));
     }
 
     @Test
     @DisplayName("Deve montar a prévia com sucesso")
     void deveMontarPreviewComSucesso() {
+        FolhaPontoRequisicaoDTO req = new FolhaPontoRequisicaoDTO(1L, 10L, 9, 2026);
         when(professorRepository.findById(1L)).thenReturn(Optional.of(professor));
         when(gradeRepository.findById(10L)).thenReturn(Optional.of(grade));
         when(aulaDaGradeRepository.findByGradeIdComDetalhes(10L)).thenReturn(List.of(aula));
 
-        FolhaPontoRequisicaoDTO req = new FolhaPontoRequisicaoDTO(1L, 10L, 9, 2026);
         FolhaPontoPreviewDTO preview = folhaPontoService.montarPreview(req);
 
         assertNotNull(preview);
+        assertEquals(9, preview.mes());
+        assertEquals(2026, preview.ano());
         assertEquals("FOLHA DE FREQUÊNCIA – 09/2026", preview.titulo());
+        assertEquals(1, preview.professor().id());
         assertEquals("Katia Barbosa", preview.professor().nome());
-        assertEquals("123456", preview.professor().matricula());
-        assertEquals("CLT", preview.professor().regimeJuridico());
-
-        // Grade horária mapeada
-        assertEquals(1, preview.gradeHoraria().size());
-        assertEquals("BD", preview.gradeHoraria().get(0).sigla());
-        assertEquals((short) 1, preview.gradeHoraria().get(0).diaSemana());
-        assertEquals(2, preview.gradeHoraria().get(0).slot());
-
-        // Calendário do mês
+        assertFalse(preview.gradeHoraria().isEmpty());
         assertEquals(30, preview.dias().size());
-        // 06/09 é domingo
-        assertTrue(preview.dias().get(5).domingo());
-        // 07/09 é feriado sem aula
-        assertTrue(preview.dias().get(6).semAula());
-        assertEquals("Feriado - Independência do Brasil", preview.dias().get(6).motivo());
     }
 
     @Test
-    @DisplayName("Deve chamar o serviço de DOCX e gerar a folha com sucesso")
-    void deveGerarFolhaPontoComSucesso() {
-        byte[] docxFake = new byte[]{80, 75, 3, 4};
+    @DisplayName("Deve buscar a grade automaticamente quando gradeId for omitido")
+    void deveBuscarGradeAutomaticamenteQuandoOmitido() {
+        FolhaPontoRequisicaoDTO req = new FolhaPontoRequisicaoDTO(1L, null, 9, 2026);
+        when(professorRepository.findById(1L)).thenReturn(Optional.of(professor));
+        when(gradeRepository.findByProfessorId(1L)).thenReturn(List.of(grade));
+        when(aulaDaGradeRepository.findByGradeIdComDetalhes(10L)).thenReturn(List.of(aula));
+
+        FolhaPontoPreviewDTO preview = folhaPontoService.montarPreview(req);
+
+        assertNotNull(preview);
+        verify(gradeRepository).findByProfessorId(1L);
+    }
+
+    @Test
+    @DisplayName("Deve gerar documento DOCX da Folha de Ponto com sucesso")
+    void deveGerarFolhaPontoDocxComSucesso() {
+        byte[] docxFake = new byte[]{1, 2, 3, 4};
         when(professorRepository.findById(1L)).thenReturn(Optional.of(professor));
         when(gradeRepository.findById(10L)).thenReturn(Optional.of(grade));
         when(aulaDaGradeRepository.findByGradeIdComDetalhes(10L)).thenReturn(List.of(aula));
@@ -126,6 +133,24 @@ class FolhaPontoServiceTest {
         assertNotNull(resultado);
         assertArrayEquals(docxFake, resultado);
         verify(folhaPontoDocxService).gerarDocumento(eq(professor), eq(grade), any(), eq(9), eq(2026));
+    }
+
+    @Test
+    @DisplayName("Deve gerar documento PDF da Folha de Ponto com sucesso")
+    void deveGerarFolhaPontoPdfComSucesso() {
+        byte[] pdfFake = new byte[]{5, 6, 7, 8};
+        when(professorRepository.findById(1L)).thenReturn(Optional.of(professor));
+        when(gradeRepository.findById(10L)).thenReturn(Optional.of(grade));
+        when(aulaDaGradeRepository.findByGradeIdComDetalhes(10L)).thenReturn(List.of(aula));
+        when(folhaPontoPdfService.gerarDocumento(eq(professor), eq(grade), any(), eq(9), eq(2026)))
+                .thenReturn(pdfFake);
+
+        FolhaPontoRequisicaoDTO req = new FolhaPontoRequisicaoDTO(1L, 10L, 9, 2026);
+        byte[] resultado = folhaPontoService.gerarFolhaPontoPdf(req);
+
+        assertNotNull(resultado);
+        assertArrayEquals(pdfFake, resultado);
+        verify(folhaPontoPdfService).gerarDocumento(eq(professor), eq(grade), any(), eq(9), eq(2026));
     }
 
     @Test

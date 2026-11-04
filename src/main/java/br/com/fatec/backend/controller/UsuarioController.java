@@ -1,11 +1,15 @@
 package br.com.fatec.backend.controller;
 
 import br.com.fatec.backend.dto.common.RespostaPadraoDTO;
+import br.com.fatec.backend.dto.usuario.GeminiApiKeyDTO;
+import br.com.fatec.backend.dto.usuario.GeminiApiKeyValidacaoDTO;
 import br.com.fatec.backend.dto.usuario.UsuarioCreateDTO;
 import br.com.fatec.backend.dto.usuario.UsuarioResponseDTO;
 import br.com.fatec.backend.dto.usuario.UsuarioUpdateDTO;
 import br.com.fatec.backend.enums.Perfil;
+import br.com.fatec.backend.service.GeminiApiKeyService;
 import br.com.fatec.backend.service.UsuarioService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,9 +24,11 @@ import java.util.List;
 public class UsuarioController {
 
     private final UsuarioService service;
+    private final GeminiApiKeyService geminiApiKeyService;
 
-    public UsuarioController(UsuarioService service) {
+    public UsuarioController(UsuarioService service, GeminiApiKeyService geminiApiKeyService) {
         this.service = service;
+        this.geminiApiKeyService = geminiApiKeyService;
     }
 
     @GetMapping("/me")
@@ -87,6 +93,50 @@ public class UsuarioController {
     public ResponseEntity<RespostaPadraoDTO<Void>> desativar(@PathVariable Long id) {
         service.desativar(id);
         return ResponseEntity.ok(RespostaPadraoDTO.sucesso("O usuário foi desativado com sucesso."));
+    }
+
+    // === GEMINI API KEY ===
+
+    @Operation(summary = "Validar e salvar chave da API do Gemini",
+            description = "Valida se a chave funciona e, se válida, a salva. Usará esta chave no lugar da padrão do sistema.")
+    @PutMapping("/me/gemini-api-key")
+    public ResponseEntity<RespostaPadraoDTO<GeminiApiKeyValidacaoDTO>> salvarGeminiApiKey(
+            @Valid @RequestBody GeminiApiKeyDTO dto,
+            Authentication authentication) {
+
+        Long idUsuarioLogado = extrairIdUsuarioLogado(authentication);
+        GeminiApiKeyValidacaoDTO resultado = geminiApiKeyService.validar(dto.apiKey());
+
+        if (resultado.valida()) {
+            service.salvarGeminiApiKey(idUsuarioLogado, dto.apiKey());
+            return ResponseEntity.ok(RespostaPadraoDTO.sucesso(
+                    "Chave da API validada e salva com sucesso. Suas extrações usarão esta chave.", resultado));
+        }
+
+        return ResponseEntity.badRequest().body(RespostaPadraoDTO.erro(
+                "Chave inválida: " + resultado.mensagem(), 400));
+    }
+
+    @Operation(summary = "Remover chave da API do Gemini do usuário",
+            description = "Remove a chave personalizada. O sistema voltará a usar a chave padrão configurada no servidor.")
+    @DeleteMapping("/me/gemini-api-key")
+    public ResponseEntity<RespostaPadraoDTO<Void>> removerGeminiApiKey(Authentication authentication) {
+        Long idUsuarioLogado = extrairIdUsuarioLogado(authentication);
+        service.removerGeminiApiKey(idUsuarioLogado);
+        return ResponseEntity.ok(RespostaPadraoDTO.sucesso(
+                "Chave da API removida. O sistema usará a chave padrão do servidor."));
+    }
+
+    @Operation(summary = "Verificar se possui chave da API do Gemini configurada")
+    @GetMapping("/me/gemini-api-key")
+    public ResponseEntity<RespostaPadraoDTO<Boolean>> verificarGeminiApiKey(Authentication authentication) {
+        Long idUsuarioLogado = extrairIdUsuarioLogado(authentication);
+        String chave = service.obterGeminiApiKey(idUsuarioLogado);
+        boolean possui = chave != null && !chave.isBlank();
+        String msg = possui
+                ? "Você tem uma chave da API do Gemini configurada."
+                : "Nenhuma chave personalizada configurada. O sistema usa a chave padrão do servidor.";
+        return ResponseEntity.ok(RespostaPadraoDTO.sucesso(msg, possui));
     }
 
     private Long extrairIdUsuarioLogado(Authentication authentication) {

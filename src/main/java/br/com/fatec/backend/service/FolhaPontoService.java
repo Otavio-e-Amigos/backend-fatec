@@ -1,6 +1,7 @@
 package br.com.fatec.backend.service;
 
 import br.com.fatec.backend.document.FolhaPontoDocxService;
+import br.com.fatec.backend.document.FolhaPontoPdfService;
 import br.com.fatec.backend.dto.folha_ponto.*;
 import br.com.fatec.backend.entity.AulaDaGrade;
 import br.com.fatec.backend.entity.Grade;
@@ -25,7 +26,7 @@ import java.util.Map;
 
 /**
  * Serviço que coordena a busca de informações no banco de dados e a geração
- * da Folha de Ponto / Frequência dos docentes.
+ * da Folha de Ponto / Frequência dos docentes nos formatos DOCX e PDF.
  */
 @Service
 public class FolhaPontoService {
@@ -45,17 +46,20 @@ public class FolhaPontoService {
     private final AulaDaGradeRepository aulaDaGradeRepository;
     private final CalendarioAcademicoService calendarioAcademicoService;
     private final FolhaPontoDocxService folhaPontoDocxService;
+    private final FolhaPontoPdfService folhaPontoPdfService;
 
     public FolhaPontoService(ProfessorRepository professorRepository,
                              GradeRepository gradeRepository,
                              AulaDaGradeRepository aulaDaGradeRepository,
                              CalendarioAcademicoService calendarioAcademicoService,
-                             FolhaPontoDocxService folhaPontoDocxService) {
+                             FolhaPontoDocxService folhaPontoDocxService,
+                             FolhaPontoPdfService folhaPontoPdfService) {
         this.professorRepository = professorRepository;
         this.gradeRepository = gradeRepository;
         this.aulaDaGradeRepository = aulaDaGradeRepository;
         this.calendarioAcademicoService = calendarioAcademicoService;
         this.folhaPontoDocxService = folhaPontoDocxService;
+        this.folhaPontoPdfService = folhaPontoPdfService;
     }
 
     /**
@@ -70,6 +74,20 @@ public class FolhaPontoService {
         List<AulaDaGrade> aulas = aulaDaGradeRepository.findByGradeIdComDetalhes(grade.getId());
 
         return folhaPontoDocxService.gerarDocumento(professor, grade, aulas, requisicao.mes(), requisicao.ano());
+    }
+
+    /**
+     * Gera o arquivo PDF final da folha de ponto para download.
+     */
+    @Transactional(readOnly = true)
+    public byte[] gerarFolhaPontoPdf(FolhaPontoRequisicaoDTO requisicao) {
+        validarRequisicao(requisicao);
+
+        Professor professor = buscarProfessor(requisicao.professorId());
+        Grade grade = buscarOuDeterminarGrade(professor.getId(), requisicao.gradeId(), requisicao.ano(), requisicao.mes());
+        List<AulaDaGrade> aulas = aulaDaGradeRepository.findByGradeIdComDetalhes(grade.getId());
+
+        return folhaPontoPdfService.gerarDocumento(professor, grade, aulas, requisicao.mes(), requisicao.ano());
     }
 
     /**
@@ -216,13 +234,12 @@ public class FolhaPontoService {
             throw new RegraNegocioException("O professor informado não possui nenhuma grade horária cadastrada.");
         }
 
-        // Tenta encontrar a grade referente ao semestre do mês
         int semestreEsperado = (mes <= 6) ? 1 : 2;
         return grades.stream()
                 .filter(g -> g.getPeriodoLetivo() != null
                         && g.getPeriodoLetivo().getAno().equals(ano)
                         && g.getPeriodoLetivo().getSemestre().equals(semestreEsperado))
                 .findFirst()
-                .orElse(grades.get(grades.size() - 1)); // Retorna a última grade cadastrada caso não haja do semestre exato
+                .orElse(grades.get(grades.size() - 1));
     }
 }

@@ -109,6 +109,25 @@ public class UsuarioService {
         repository.save(usuario);
     }
 
+    @Transactional
+    public void salvarGeminiApiKey(Long usuarioId, String apiKey) {
+        Usuario usuario = buscarEntidadePorId(usuarioId);
+        usuario.atualizarGeminiApiKey(apiKey);
+        repository.save(usuario);
+    }
+
+    @Transactional
+    public void removerGeminiApiKey(Long usuarioId) {
+        Usuario usuario = buscarEntidadePorId(usuarioId);
+        usuario.removerGeminiApiKey();
+        repository.save(usuario);
+    }
+
+    @Transactional(readOnly = true)
+    public String obterGeminiApiKey(Long usuarioId) {
+        return buscarEntidadePorId(usuarioId).getGeminiApiKey();
+    }
+
     private String gerarLoginAutomatico(String nomeCompleto) {
         String[] partes = nomeCompleto.trim().toLowerCase().split("\\s+");
         String baseLogin = partes.length > 1

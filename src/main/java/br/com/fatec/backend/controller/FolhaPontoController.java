@@ -16,10 +16,11 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/folhas-ponto")
-@Tag(name = "Folha de Ponto", description = "Endpoints para prévia estruturada e geração do documento oficial DOCX da Folha de Ponto")
+@Tag(name = "Folha de Ponto", description = "Endpoints para prévia estruturada e geração dos documentos oficiais em DOCX e PDF da Folha de Ponto")
 public class FolhaPontoController {
 
     private static final String DOCX_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    private static final String PDF_MEDIA_TYPE = "application/pdf";
 
     private final FolhaPontoService folhaPontoService;
 
@@ -85,5 +86,41 @@ public class FolhaPontoController {
                 .contentType(MediaType.parseMediaType(DOCX_MEDIA_TYPE))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + nomeArquivo + "\"")
                 .body(docxBytes);
+    }
+
+    @PostMapping("/gerar-pdf")
+    @Operation(summary = "Gerar documento PDF da Folha de Ponto", description = "Gera a Folha de Ponto completa diretamente em formato PDF para impressão ou download")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Documento PDF gerado e retornado para download"),
+            @ApiResponse(responseCode = "400", description = "Parâmetros inválidos"),
+            @ApiResponse(responseCode = "404", description = "Professor ou grade não encontrados")
+    })
+    public ResponseEntity<byte[]> gerarPdfPost(@Valid @RequestBody FolhaPontoRequisicaoDTO requisicao) {
+        byte[] pdfBytes = folhaPontoService.gerarFolhaPontoPdf(requisicao);
+        String nomeArquivo = String.format("Folha_de_Ponto_Professor_%d_%02d_%d.pdf",
+                requisicao.professorId(), requisicao.mes(), requisicao.ano());
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(PDF_MEDIA_TYPE))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + nomeArquivo + "\"")
+                .body(pdfBytes);
+    }
+
+    @GetMapping("/gerar-pdf")
+    @Operation(summary = "Gerar documento PDF da Folha de Ponto via GET", description = "Permite o download direto do documento PDF via link ou requisição GET")
+    public ResponseEntity<byte[]> gerarPdfGet(
+            @RequestParam Long professorId,
+            @RequestParam(required = false) Long gradeId,
+            @RequestParam Integer mes,
+            @RequestParam Integer ano) {
+        FolhaPontoRequisicaoDTO requisicao = new FolhaPontoRequisicaoDTO(professorId, gradeId, mes, ano);
+        byte[] pdfBytes = folhaPontoService.gerarFolhaPontoPdf(requisicao);
+        String nomeArquivo = String.format("Folha_de_Ponto_Professor_%d_%02d_%d.pdf",
+                requisicao.professorId(), requisicao.mes(), requisicao.ano());
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(PDF_MEDIA_TYPE))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + nomeArquivo + "\"")
+                .body(pdfBytes);
     }
 }

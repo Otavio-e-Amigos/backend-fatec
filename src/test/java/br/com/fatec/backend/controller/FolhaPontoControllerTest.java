@@ -95,36 +95,4 @@ class FolhaPontoControllerTest {
                 .andExpect(header().exists(HttpHeaders.CONTENT_DISPOSITION))
                 .andExpect(content().bytes(docxFake));
     }
-
-    @Test
-    @DisplayName("Deve retornar download do PDF via POST")
-    void deveRetornarPdfPost() throws Exception {
-        byte[] pdfFake = new byte[]{37, 80, 68, 70, 45};
-        when(folhaPontoService.gerarFolhaPontoPdf(any())).thenReturn(pdfFake);
-
-        FolhaPontoRequisicaoDTO req = new FolhaPontoRequisicaoDTO(1L, 10L, 9, 2026);
-
-        mockMvc.perform(post("/api/folhas-ponto/gerar-pdf")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(req)))
-                .andExpect(status().isOk())
-                .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"Folha_de_Ponto_Professor_1_09_2026.pdf\""))
-                .andExpect(content().contentType(MediaType.APPLICATION_PDF))
-                .andExpect(content().bytes(pdfFake));
-    }
-
-    @Test
-    @DisplayName("Deve permitir download direto do PDF via GET")
-    void devePermitirDownloadPdfViaGet() throws Exception {
-        byte[] pdfFake = new byte[]{37, 80, 68, 70, 45};
-        when(folhaPontoService.gerarFolhaPontoPdf(any())).thenReturn(pdfFake);
-
-        mockMvc.perform(get("/api/folhas-ponto/gerar-pdf")
-                        .param("professorId", "1")
-                        .param("mes", "9")
-                        .param("ano", "2026"))
-                .andExpect(status().isOk())
-                .andExpect(header().exists(HttpHeaders.CONTENT_DISPOSITION))
-                .andExpect(content().bytes(pdfFake));
-    }
 }

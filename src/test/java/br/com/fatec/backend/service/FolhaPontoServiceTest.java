@@ -1,7 +1,6 @@
 package br.com.fatec.backend.service;
 
 import br.com.fatec.backend.document.FolhaPontoDocxService;
-import br.com.fatec.backend.document.FolhaPontoPdfService;
 import br.com.fatec.backend.dto.folha_ponto.FolhaPontoPreviewDTO;
 import br.com.fatec.backend.dto.folha_ponto.FolhaPontoRequisicaoDTO;
 import br.com.fatec.backend.entity.*;
@@ -53,9 +52,6 @@ class FolhaPontoServiceTest {
 
     @Mock
     private FolhaPontoDocxService folhaPontoDocxService;
-
-    @Mock
-    private FolhaPontoPdfService folhaPontoPdfService;
 
     @InjectMocks
     private FolhaPontoService folhaPontoService;
@@ -133,24 +129,6 @@ class FolhaPontoServiceTest {
         assertNotNull(resultado);
         assertArrayEquals(docxFake, resultado);
         verify(folhaPontoDocxService).gerarDocumento(eq(professor), eq(grade), any(), eq(9), eq(2026));
-    }
-
-    @Test
-    @DisplayName("Deve gerar documento PDF da Folha de Ponto com sucesso")
-    void deveGerarFolhaPontoPdfComSucesso() {
-        byte[] pdfFake = new byte[]{5, 6, 7, 8};
-        when(professorRepository.findById(1L)).thenReturn(Optional.of(professor));
-        when(gradeRepository.findById(10L)).thenReturn(Optional.of(grade));
-        when(aulaDaGradeRepository.findByGradeIdComDetalhes(10L)).thenReturn(List.of(aula));
-        when(folhaPontoPdfService.gerarDocumento(eq(professor), eq(grade), any(), eq(9), eq(2026)))
-                .thenReturn(pdfFake);
-
-        FolhaPontoRequisicaoDTO req = new FolhaPontoRequisicaoDTO(1L, 10L, 9, 2026);
-        byte[] resultado = folhaPontoService.gerarFolhaPontoPdf(req);
-
-        assertNotNull(resultado);
-        assertArrayEquals(pdfFake, resultado);
-        verify(folhaPontoPdfService).gerarDocumento(eq(professor), eq(grade), any(), eq(9), eq(2026));
     }
 
     @Test

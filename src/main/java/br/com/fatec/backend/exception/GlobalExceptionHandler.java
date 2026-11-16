@@ -128,6 +128,24 @@ public class GlobalExceptionHandler {
                         HttpStatus.BAD_REQUEST.value()));
     }
 
+    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<RespostaPadraoDTO<Void>> handleParametroInvalido(
+            org.springframework.web.method.annotation.MethodArgumentTypeMismatchException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(RespostaPadraoDTO.erro(
+                        "Valor inválido para o parâmetro '" + ex.getName() + "'.",
+                        HttpStatus.BAD_REQUEST.value()));
+    }
+
+    @ExceptionHandler(org.springframework.web.bind.MissingServletRequestParameterException.class)
+    public ResponseEntity<RespostaPadraoDTO<Void>> handleParametroAusente(
+            org.springframework.web.bind.MissingServletRequestParameterException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(RespostaPadraoDTO.erro(
+                        "O parâmetro '" + ex.getParameterName() + "' é obrigatório.",
+                        HttpStatus.BAD_REQUEST.value()));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<RespostaPadraoDTO<Void>> handleGenericException(Exception ex) {
         log.error("Erro inesperado", ex);

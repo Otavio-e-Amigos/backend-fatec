@@ -31,4 +31,10 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
      * Útil para validar a alteração do login de um usuário.
      */
     boolean existsByLoginAndIdNot(String login, Long id);
+
+    /**
+     * Usuários ativos dos perfis informados.
+     * Usado para direcionar notificações por perfil (ex: lembrete anual do calendário).
+     */
+    java.util.List<Usuario> findByAtivoTrueAndPerfilIn(java.util.Collection<br.com.fatec.backend.enums.Perfil> perfis);
 }

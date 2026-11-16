@@ -45,17 +45,20 @@ public class FolhaPontoService {
     private final AulaDaGradeRepository aulaDaGradeRepository;
     private final CalendarioAcademicoService calendarioAcademicoService;
     private final FolhaPontoDocxService folhaPontoDocxService;
+    private final HistoricoFolhaPontoService historicoFolhaPontoService;
 
     public FolhaPontoService(ProfessorRepository professorRepository,
                              GradeRepository gradeRepository,
                              AulaDaGradeRepository aulaDaGradeRepository,
                              CalendarioAcademicoService calendarioAcademicoService,
-                             FolhaPontoDocxService folhaPontoDocxService) {
+                             FolhaPontoDocxService folhaPontoDocxService,
+                             HistoricoFolhaPontoService historicoFolhaPontoService) {
         this.professorRepository = professorRepository;
         this.gradeRepository = gradeRepository;
         this.aulaDaGradeRepository = aulaDaGradeRepository;
         this.calendarioAcademicoService = calendarioAcademicoService;
         this.folhaPontoDocxService = folhaPontoDocxService;
+        this.historicoFolhaPontoService = historicoFolhaPontoService;
     }
 
     /**
@@ -69,7 +72,11 @@ public class FolhaPontoService {
         Grade grade = buscarOuDeterminarGrade(professor.getId(), requisicao.gradeId(), requisicao.ano(), requisicao.mes());
         List<AulaDaGrade> aulas = aulaDaGradeRepository.findByGradeIdComDetalhes(grade.getId());
 
-        return folhaPontoDocxService.gerarDocumento(professor, grade, aulas, requisicao.mes(), requisicao.ano());
+        byte[] documento = folhaPontoDocxService.gerarDocumento(professor, grade, aulas, requisicao.mes(), requisicao.ano());
+
+        // Histórico (relatórios) + notificação. Roda em transação própria e nunca impede o download.
+        historicoFolhaPontoService.registrarGeracao(professor, grade, aulas, requisicao.mes(), requisicao.ano());
+        return documento;
     }
 
     /**

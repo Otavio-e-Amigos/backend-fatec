@@ -9,4 +9,7 @@ import java.util.Optional;
 public interface ProfessorRepository extends JpaRepository<Professor, Long>, JpaSpecificationExecutor<Professor> {
     Optional<Professor> findByCpf(String cpf);
     Optional<Professor> findByMatricula(String matricula);
+
+    /** Quantidade de professores em um status (relatório geral de folhas de ponto). */
+    long countByStatus(br.com.fatec.backend.enums.StatusProfessor status);
 }

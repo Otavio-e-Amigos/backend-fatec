@@ -105,6 +105,17 @@
         </dependency>
 
         <!--
+           OpenPDF (LGPL/MPL) é a biblioteca usada para gerar
+           os relatórios gerenciais em PDF.
+        -->
+
+        <dependency>
+            <groupId>com.github.librepdf</groupId>
+            <artifactId>openpdf</artifactId>
+            <version>2.0.3</version>
+        </dependency>
+
+        <!--
            Controle e versionamento das migrations do banco de dados
         -->
 

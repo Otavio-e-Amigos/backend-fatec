@@ -53,6 +53,9 @@ class FolhaPontoServiceTest {
     @Mock
     private FolhaPontoDocxService folhaPontoDocxService;
 
+    @Mock
+    private HistoricoFolhaPontoService historicoFolhaPontoService;
+
     @InjectMocks
     private FolhaPontoService folhaPontoService;
 
@@ -129,6 +132,7 @@ class FolhaPontoServiceTest {
         assertNotNull(resultado);
         assertArrayEquals(docxFake, resultado);
         verify(folhaPontoDocxService).gerarDocumento(eq(professor), eq(grade), any(), eq(9), eq(2026));
+        verify(historicoFolhaPontoService).registrarGeracao(eq(professor), eq(grade), any(), eq(9), eq(2026));
     }
 
     @Test

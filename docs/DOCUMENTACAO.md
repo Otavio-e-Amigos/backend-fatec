@@ -100,6 +100,34 @@ Integridade Relacional e Constraints:
 * ` CONSTRAINT ck_aula_grade_horario CHECK (hora_fim > hora_inicio)`.
 * ` CONSTRAINT ck_aula_grade_dia_semana CHECK (dia_semana BETWEEN 1 AND 7)`.
 
+### 3.9 Tabela Notificação **`[Sprint 5 - Notificações]`**
+
+*
+Tabela `notificacao`: colunas `id`, `usuario_id` (FK), `categoria` (`EXTRACAO_GRADE`, `FOLHA_PONTO`, `RELATORIO`, `CALENDARIO`), `tipo`, `titulo` (VARCHAR 150), `mensagem` (VARCHAR 1000), `referencia_tipo`, `referencia_id`, `lida`, `lida_em`, `pendente`, `resolvida_em`, `chave_deduplicacao`, `expira_em` e `created_at`.
+*
+Cada linha pertence a um único usuário. Notificações para um perfil são gravadas uma por usuário ativo, o que permite controlar a leitura individualmente.
+*
+Integridade: `CONSTRAINT uk_notificacao_usuario_chave UNIQUE (usuario_id, chave_deduplicacao)` impede notificações duplicadas; índices `idx_notificacao_usuario_created` e `idx_notificacao_usuario_nao_lida` (parcial, `lida = FALSE`).
+
+### 3.10 Tabela Registro de Extração de Grade **`[Sprint 5 - Relatórios]`**
+
+*
+Tabela `registro_extracao_grade`: histórico de cada extração de PDF tentada. Colunas `usuario_id`, `professor_id` (preenchido quando a matrícula extraída já está cadastrada), `nome_arquivo`, `tamanho_bytes`, `status` (`SUCESSO`, `SUCESSO_COM_AVISOS`, `FALHA`), `mensagem_erro`, `professor_nome`, `professor_matricula`, `semestre`, `ano`, `quantidade_disciplinas`, `quantidade_aulas`, `quantidade_avisos`, `duracao_ms` e `created_at`.
+*
+O CPF extraído **não** é armazenado. FKs com `ON DELETE SET NULL`. Índice `idx_registro_extracao_created`.
+
+### 3.11 Tabela Registro de Folha de Ponto **`[Sprint 5 - Relatórios]`**
+
+*
+Tabela `registro_folha_ponto`: uma linha por folha gerada (download do DOCX). Colunas `professor_id`, `grade_id`, `usuario_id`, `mes`, `ano` (competência), `periodo_letivo_ano`, `periodo_letivo_semestre`, `grade_outro_periodo`, `dias_sem_aula`, `quantidade_disciplinas`, `formato` e `created_at`.
+*
+`grade_id` usa `ON DELETE SET NULL` para não impedir a exclusão de grades; ano e semestre do período ficam copiados para preservar o histórico. Índices `idx_registro_folha_created` e `idx_registro_folha_professor_created`.
+
+### 3.12 Tabela Atualização do Calendário **`[Sprint 5 - Calendário]`**
+
+*
+Tabela `calendario_atualizacao` (PK `ano`): `usuario_id`, `observacao` e `atualizado_em`. Registra a confirmação de que o calendário acadêmico do ano foi revisado. Os eventos do calendário continuam em memória (D-03 pendente).
+
 ---
 
 ## 4. Sistema de Grade
@@ -145,6 +173,8 @@ Transmissão: Todas as requisições protegidas devem enviar o token no cabeçal
 ### 6.3 Controle de Acesso a Módulos **`[Sprint 2 e 3]`**
 
 As rotas dos módulos `/api/professores/**`, `/api/periodos-letivos/**`, `/api/cursos/**`, `/api/disciplinas/**`, `/api/grades/**`, `/api/disciplinas-grade/**` e `/api/aulas-grade/**` exigem autenticação obrigatória via Bearer Token e permissão `ROLE_TI` ou `ROLE_RESPONSAVEL`.
+
+**`[Sprint 5]`** `/api/relatorios/**` exige `ROLE_TI` ou `ROLE_RESPONSAVEL`. `/api/notificacoes/**` exige apenas autenticação: cada usuário acessa somente as próprias notificações (uma notificação de outro usuário responde `404`). `/api/calendario/atualizacao/**` segue a regra existente de `/api/calendario/**`.
 
 ### 6.4 Tratamento de Acessos Negados **`[Sprint 1 - Manter Usuário]`**
 
@@ -246,6 +276,35 @@ Todas as requisições da API são padronizadas pela classe `RespostaPadraoDTO` 
 * ` POST /api/folhas-ponto/preview` e `GET /api/folhas-ponto/preview` — Retorna os dados estruturados da prévia para conferência acadêmica (`200 OK` / `400 Bad Request` / `404 Not Found`).
 * ` POST /api/folhas-ponto/gerar` e `GET /api/folhas-ponto/gerar` — Preenche o modelo DOCX oficial e retorna o arquivo para download (`200 OK` / `400 Bad Request` / `404 Not Found`).
 * *Nota:* As rotas também respondem sob o path alternativo canônico `/api/folhas-frequencia/**`.
+
+**Notificações `[Sprint 5 - Notificações]` (qualquer usuário autenticado, somente as próprias):**
+
+* ` GET /api/notificacoes` — Lista paginada, mais recentes primeiro. Filtros opcionais: `lida`, `categoria`, `apenasPendentes`, `incluirExpiradas` (`200 OK`).
+* ` GET /api/notificacoes/contagem` — Quantidade de não lidas e de pendências abertas (`200 OK`).
+* ` GET /api/notificacoes/{id}` — Detalhe (`200 OK` / `404 Not Found`).
+* ` PATCH /api/notificacoes/{id}/lida` e `PATCH /api/notificacoes/{id}/nao-lida` — Controle de leitura (`200 OK` / `404 Not Found`).
+* ` PATCH /api/notificacoes/lidas` — Marca todas como lidas e devolve a quantidade atualizada (`200 OK`).
+
+*Fluxo de uso no frontend (também descrito na tag "Notificações" do Swagger):*
+
+* ` GET /api/notificacoes/contagem` mostra o número no sininho.
+* ` GET /api/notificacoes` abre a lista.
+* ` PATCH /api/notificacoes/{id}/lida` marca uma notificação como lida quando o usuário clica nela.
+* ` PATCH /api/notificacoes/lidas` atende o botão "marcar todas como lidas".
+
+**Relatórios `[Sprint 5 - Relatórios]` (TI e RESPONSAVEL):**
+
+Parâmetros comuns: `periodo` = `DIARIO`, `SEMANAL` (segunda a domingo) ou `MENSAL` (obrigatório); `data` = qualquer data dentro do período, `yyyy-MM-dd` (opcional, padrão hoje, não pode ser futura); `formato` = `PDF` ou `DOCX` (exportação).
+
+* ` GET /api/relatorios/extracoes-grade` — Relatório de extração de grades em JSON (`200 OK` / `400 Bad Request`).
+* ` GET /api/relatorios/extracoes-grade/exportar` — Mesmo relatório em PDF ou DOCX para download (`200 OK` / `400 Bad Request`).
+* ` GET /api/relatorios/folhas-ponto` — Relatório de folhas de ponto. Sem `professorId`: todos os professores; com `professorId`: relatório individual (`200 OK` / `400 Bad Request` / `404 Not Found`).
+* ` GET /api/relatorios/folhas-ponto/exportar` — Mesmo relatório em PDF ou DOCX (`200 OK` / `400 Bad Request` / `404 Not Found`).
+
+**Atualização anual do calendário `[Sprint 5 - Calendário]` (TI e RESPONSAVEL):**
+
+* ` GET /api/calendario/atualizacao` e `GET /api/calendario/atualizacao/{ano}` — Situação do calendário do ano: confirmado ou não, quem confirmou, eventos do ano e se o lembrete está ativo (`200 OK` / `400 Bad Request`).
+* ` POST /api/calendario/atualizacao/{ano}/confirmar` — Confirma que o calendário do ano foi atualizado. Corpo opcional `{ "observacao": "..." }`. Encerra as pendências do ano (`200 OK` / `400 Bad Request`).
 
 ### 7.3 Documentação OpenAPI (Swagger) **`[Sprint 1 - Manter Usuário]`**
 
@@ -368,3 +427,68 @@ Exclusão Física: Suporte ao endpoint `DELETE /api/disciplinas/{id}` para remo�
 ### 9.9 Inicialização de Dados (Data Seeding) **`[Sprint 1 - Manter Usuário]`**
 
 Caso o banco de dados seja criado do zero, o sistema popula automaticamente dois usuários essenciais para evitar travamento operacional inicial: um `TI` (`admin.ti` Senha: `admin123`) e um `RESPONSAVEL` (`user.resp` Senha: `resp123`).
+
+---
+
+## 10. Notificações Internas `[Sprint 5 - Notificações]`
+
+As notificações são exibidas somente dentro do Appointer (sem e-mail, WhatsApp ou outro serviço externo).
+
+| Categoria | Tipo | Quando é gerada | Destinatário |
+|---|---|---|---|
+| `EXTRACAO_GRADE` | `EXTRACAO_GRADE_CONCLUIDA` / `EXTRACAO_GRADE_COM_AVISOS` | Extração concluída (com contagem de disciplinas, aulas e avisos) | Usuário que enviou o PDF |
+| `EXTRACAO_GRADE` | `EXTRACAO_GRADE_FALHA` | Falha na leitura pelo Gemini ou resposta inválida (com o motivo) | Usuário que enviou o PDF |
+| `FOLHA_PONTO` | `FOLHA_PONTO_GERADA` / `FOLHA_PONTO_GERADA_COM_AVISOS` | Download do DOCX oficial. Com aviso quando a grade usada é de outro período letivo | Usuário que gerou |
+| `RELATORIO` | `RELATORIO_GERADO` | Exportação de relatório em PDF/DOCX | Usuário que exportou |
+| `CALENDARIO` | `CALENDARIO_ATUALIZACAO_PENDENTE` | Fevereiro, enquanto o calendário do ano não for confirmado | Usuários ativos TI e RESPONSAVEL |
+
+Regras:
+
+* O registro do histórico e a notificação rodam em transação própria (`REQUIRES_NEW`). Uma falha nessa etapa é apenas registrada em log e não afeta a extração nem o download da folha.
+* Prévias da folha de ponto não geram notificação nem entram no histórico.
+* Notificações com `expira_em` vencido saem da listagem padrão e continuam disponíveis com `incluirExpiradas=true`.
+* Pendências (`pendente = true`) são encerradas pelo sistema (`resolvida_em`) quando a ação correspondente é feita; marcar como lida não encerra a pendência.
+
+### 10.1 Uso das rotas
+
+* **Identificação do usuário:** todas as rotas usam o token JWT (`Authorization: Bearer <token>`). O ID do usuário vem do token, nunca da requisição; uma notificação de outro usuário responde `404`.
+* **Sininho:** `GET /api/notificacoes/contagem` devolve `naoLidas` e `pendentes`. É uma consulta leve, própria para ser chamada periodicamente.
+* **Lista:** `GET /api/notificacoes` devolve uma página (`content`, `totalElements`, etc.), 20 itens por padrão, mais recentes primeiro. Filtros: `lida=false` (só não lidas), `categoria` (`EXTRACAO_GRADE`, `FOLHA_PONTO`, `RELATORIO`, `CALENDARIO`), `apenasPendentes=true` e `incluirExpiradas=true` (histórico completo, incluindo o lembrete do calendário após fevereiro).
+* **Leitura:** `PATCH /api/notificacoes/{id}/lida` ao clicar na notificação; `PATCH /api/notificacoes/{id}/nao-lida` desfaz; `PATCH /api/notificacoes/lidas` marca todas e devolve a quantidade alterada.
+* **Detalhe:** `GET /api/notificacoes/{id}` retorna uma notificação específica. Os campos `referenciaTipo` e `referenciaId` indicam o registro relacionado (ex: `REGISTRO_FOLHA_PONTO`).
+
+## 11. Relatórios Gerenciais `[Sprint 5 - Relatórios]`
+
+### 11.1 Períodos
+
+`DIARIO` (o dia informado), `SEMANAL` (segunda a domingo da semana da data, ISO-8601) e `MENSAL` (mês da data). Datas futuras e anteriores a 2000 são rejeitadas com `400`. Quando o período ainda não terminou, o relatório indica `emAndamento = true` (dados parciais).
+
+### 11.2 Relatório de extração de grades
+
+Fonte: `registro_extracao_grade`. Apresenta grades extraídas (sucesso com ou sem avisos), tentativas, falhas, taxa de sucesso, disciplinas e horários extraídos, avisos para revisão, tempo médio e máximo de processamento, volume de PDFs, professores distintos (por matrícula) e quantos já estão cadastrados, evolução diária, extrações por usuário, grades por período letivo, principais motivos de falha e o detalhamento de cada extração.
+
+### 11.3 Relatório de folhas de ponto
+
+Fonte: `registro_folha_ponto`, cruzado com professor, grade, período letivo e disciplinas da grade.
+
+* **Todos os professores:** total de folhas, professores atendidos, média por professor, professores ativos sem folha no período, regerações (mesmo professor e competência gerados mais de uma vez), folhas com grade de outro período, comparativo por professor (folhas no período, % do total, histórico acumulado, última geração, competências), folhas por competência, evolução diária, gerações por usuário e histórico.
+* **Individual (`professorId`):** além do acima, identificação do professor (sem CPF), total histórico, primeira e última geração, cursos em que leciona, grades vinculadas (período, vigência, disciplinas ministrando/total, aulas semanais, carga horária, folhas geradas por grade) e principais disciplinas (ordenadas por períodos letivos em que aparecem e aulas semanais; disciplinas canceladas não somam aulas).
+
+### 11.4 Exportação PDF e DOCX
+
+Os dois formatos têm o mesmo conteúdo: os dados são convertidos uma vez no modelo `DocumentoRelatorio` e renderizados por `RelatorioPdfRenderer` (OpenPDF 2.0.3) e `RelatorioDocxRenderer` (Apache POI). Página A4, cabeçalho com identificação do Appointer e tipo do relatório, título, período analisado, data de geração e usuário, cartões de indicadores, seções com tabelas (cabeçalho repetido em cada página), rodapé com data de geração e "Página X de Y". O arquivo é gerado em memória e devolvido para download.
+
+Conteúdo dos documentos exportados:
+
+* **Extração de grades:** indicadores, resumo do processamento, extrações por usuário, grades por período letivo, principais motivos de falha e grades processadas.
+* **Folhas de ponto:** indicadores (incluindo competências, regerações e folhas com grade de outro período), identificação do professor e grades vinculadas (relatório individual), comparativo por professor (relatório geral), folhas por competência, gerações por usuário e histórico.
+* A evolução diária e as principais disciplinas continuam na resposta JSON, mas não entram nos documentos. Campos sem valor ficam em branco.
+
+## 12. Lembrete Anual do Calendário Acadêmico `[Sprint 5 - Calendário]`
+
+* `CalendarioLembreteAgendador` executa a verificação diariamente às 07:00 (America/Sao_Paulo) durante fevereiro (`appointer.calendario.lembrete.cron`, padrão `0 0 7 * 2 *`) e também ao iniciar a aplicação.
+* Se o calendário do ano vigente não tiver sido confirmado, cada usuário ativo TI ou RESPONSAVEL recebe uma pendência com chave `CALENDARIO_ATUALIZACAO_{ano}`. A constraint única e a verificação prévia impedem duplicatas; usuários criados durante fevereiro recebem na verificação seguinte.
+* A pendência expira em 1º de março (só é exibida em fevereiro).
+* A confirmação (`POST /api/calendario/atualizacao/{ano}/confirmar`) pode ser feita antes ou durante fevereiro. Ela grava `calendario_atualizacao`, encerra as pendências do ano e impede novos lembretes.
+* `appointer.calendario.lembrete.habilitado=false` desliga o lembrete.
+

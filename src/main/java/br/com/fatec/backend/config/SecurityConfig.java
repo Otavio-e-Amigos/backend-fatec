@@ -96,6 +96,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/folhas-ponto/**").hasAnyRole("TI", "RESPONSAVEL")
                         // 12. Gestão do Calendário Acadêmico em memória (AMBOS para os perfis TI/Responsável)
                         .requestMatchers("/api/calendario/**").hasAnyRole("TI", "RESPONSAVEL")
+                        // 13. Relatórios gerenciais (AMBOS para os perfis TI/Responsável)
+                        .requestMatchers("/api/relatorios/**").hasAnyRole("TI", "RESPONSAVEL")
+                        // 14. Notificações internas (qualquer usuário autenticado; cada um vê apenas as próprias)
+                        .requestMatchers("/api/notificacoes/**").authenticated()
 
                         // Qualquer outro endpoint exige autenticação por padrão
                         .anyRequest().authenticated()

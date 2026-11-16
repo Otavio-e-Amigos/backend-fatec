@@ -4,6 +4,9 @@ import br.com.fatec.backend.dto.extracao_grade.GradeExtraidaDTO;
 import br.com.fatec.backend.entity.Usuario;
 import br.com.fatec.backend.exception.RegraNegocioException;
 import br.com.fatec.backend.repository.UsuarioRepository;
+import br.com.fatec.backend.exception.ExtracaoIndisponivelException;
+import br.com.fatec.backend.service.HistoricoExtracaoGradeService;
+import br.com.fatec.backend.service.UsuarioAutenticadoService;
 import br.com.fatec.backend.service.extracao.ValidadorGradeExtraida.Resultado;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,13 +25,19 @@ public class ExtracaoGradeService {
     private final ExtratorDeGrade extrator;
     private final ValidadorGradeExtraida validador;
     private final UsuarioRepository usuarioRepository;
+    private final HistoricoExtracaoGradeService historicoExtracaoGradeService;
+    private final UsuarioAutenticadoService usuarioAutenticadoService;
 
     public ExtracaoGradeService(ExtratorDeGrade extrator,
                                 ValidadorGradeExtraida validador,
-                                UsuarioRepository usuarioRepository) {
+                                UsuarioRepository usuarioRepository,
+                                HistoricoExtracaoGradeService historicoExtracaoGradeService,
+                                UsuarioAutenticadoService usuarioAutenticadoService) {
         this.extrator = extrator;
         this.validador = validador;
         this.usuarioRepository = usuarioRepository;
+        this.historicoExtracaoGradeService = historicoExtracaoGradeService;
+        this.usuarioAutenticadoService = usuarioAutenticadoService;
     }
 
     public GradeExtraidaDTO extrair(MultipartFile arquivo) {
@@ -56,8 +65,33 @@ public class ExtracaoGradeService {
 
         String apiKeyEfetiva = resolverApiKey(apiKeyInformada);
 
-        Resultado r = validador.processar(extrator.extrair(bytes, apiKeyEfetiva));
-        return r.dados().comAvisos(r.problemas());
+        // A partir daqui a extração é de fato tentada: o resultado (sucesso ou falha) entra no
+        // histórico usado pelos relatórios e gera uma notificação interna para o usuário.
+        Long usuarioId = usuarioAutenticadoService.idUsuarioAtual().orElse(null);
+        long inicio = System.nanoTime();
+        try {
+            Resultado r = validador.processar(extrator.extrair(bytes, apiKeyEfetiva));
+            GradeExtraidaDTO resultado = r.dados().comAvisos(r.problemas());
+            historicoExtracaoGradeService.registrarSucesso(usuarioId, arquivo.getOriginalFilename(),
+                    arquivo.getSize(), resultado, milissegundosDesde(inicio));
+            return resultado;
+        } catch (RuntimeException e) {
+            historicoExtracaoGradeService.registrarFalha(usuarioId, arquivo.getOriginalFilename(),
+                    arquivo.getSize(), motivoFalha(e), milissegundosDesde(inicio));
+            throw e;
+        }
+    }
+
+    /** Usa apenas mensagens de negócio (já amigáveis); erros inesperados não expõem detalhes técnicos. */
+    private static String motivoFalha(RuntimeException e) {
+        if (e instanceof RegraNegocioException || e instanceof ExtracaoIndisponivelException) {
+            return e.getMessage();
+        }
+        return "Erro interno durante o processamento do PDF.";
+    }
+
+    private static long milissegundosDesde(long inicioNano) {
+        return (System.nanoTime() - inicioNano) / 1_000_000;
     }
 
     public GradeExtraidaDTO validar(GradeExtraidaDTO dados) {
